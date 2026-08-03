@@ -72,9 +72,19 @@ Focus: what turns a learning project into something defensible in a technical in
 
 **Done when:** distributed tracing is visible across at least 2 services, health checks are exposed, and a circuit breaker is configured on at least one synchronous call between services.
 
+### Phase 6 — Real cloud infrastructure via Terraform (optional, requires a cloud account)
+
+Provision an actual managed Kubernetes cluster in the cloud using Terraform, then deploy the same manifests from Phase 4 onto it — reinforcing the split between "what provisions the cluster" (Terraform) and "what runs inside it" (Kubernetes manifests/Helm).
+
+Focus: Infrastructure as Code, cloud resource lifecycle (`plan` / `apply` / `destroy`), treating cluster infrastructure and workload deployment as separate concerns.
+
+Provider choice and cost are a decision for when this phase is actually planned, not now.
+
+**Done when:** `terraform apply` provisions a working managed Kubernetes cluster from scratch, the Phase 4 manifests deploy successfully onto it, and `terraform destroy` tears it down cleanly with no orphaned resources.
+
 ## Tech debt
 
-Known limitations and deliberate trade-offs are tracked in [`docs/tech-debt.md`](../../tech-debt.md), not here — check it before starting each new phase.
+Known limitations and deliberate trade-offs are tracked in [`docs/tech-debt.md`](tech-debt.md), not here — check it before starting each new phase.
 
 ## Deferred decisions
 

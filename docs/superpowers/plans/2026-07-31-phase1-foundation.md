@@ -2669,7 +2669,7 @@ git commit -m "feat(orders): standardize error responses"
 
 A learning project: an e-commerce system built incrementally to practice microservices in Java, messaging with RabbitMQ/Kafka, containerization with Docker, and orchestration with Kubernetes.
 
-See [docs/superpowers/specs/2026-07-31-roadmap-overview.md](docs/superpowers/specs/2026-07-31-roadmap-overview.md) for the full roadmap and [docs/tech-debt.md](docs/tech-debt.md) for known limitations.
+See [docs/roadmap.md](docs/roadmap.md) for the full roadmap and [docs/tech-debt.md](docs/tech-debt.md) for known limitations.
 
 ## Phase 1 — Microservices foundation
 

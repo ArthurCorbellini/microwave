@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-31
 **Status:** approved, ready for implementation planning
-**Related:** [Roadmap overview](2026-07-31-roadmap-overview.md) · [Tech debt](../../tech-debt.md)
+**Related:** [Roadmap overview](../../roadmap.md) · [Tech debt](../../tech-debt.md)
 
 ## Goal
 
