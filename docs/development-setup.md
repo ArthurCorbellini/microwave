@@ -8,6 +8,13 @@ Everything (Java 25, Maven, the Java/Spring VS Code extensions) runs inside a co
 
 **Requirements:** VS Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), and a working Docker or Podman.
 
+> **Reminder if you're on Podman:** VS Code needs to know to call `podman-remote` (or `podman`) instead of `docker`. This can't live in this repo (it's a VS Code setting scoped to "all profiles", not per-project), so add it to your own `settings.json` once:
+> ```json
+> { "dev.containers.dockerPath": "podman-remote" }
+> ```
+>
+> **Also on Podman:** the first "Reopen in Container" for a new checkout can fail with a `TypeError` from the extension (a known race condition on its side, not this repo's config). Just try "Reopen in Container" again — it's reliable after that.
+
 **Steps:**
 
 1. Run the setup script once — it detects Docker or Podman and generates `.devcontainer/devcontainer.json`:
@@ -19,8 +26,6 @@ Everything (Java 25, Maven, the Java/Spring VS Code extensions) runs inside a co
 4. Wait for the build (first time only — pulls the base image and installs Maven). VS Code reconnects itself inside the container automatically.
 
 That's it — `mvn`, `java`, and the Java/Spring extensions are all available inside the integrated terminal, and Testcontainers can reach the container engine without any extra setup.
-
-No per-machine VS Code settings needed: `.vscode/settings.json` (committed) points `dev.containers.dockerPath` at `.vscode/bin/container-engine`, a small wrapper that detects Docker or Podman at invocation time and forwards to whichever is found. Works the same on Docker or Podman, on any machine, with nothing to configure.
 
 Re-run `./scripts/setup-devcontainer.sh` any time you switch machines or engines — it regenerates `.devcontainer/devcontainer.json` (which is gitignored, since it's a generated file) from the matching template in `.devcontainer/devcontainer-docker.json` / `devcontainer-podman.json`.
 
