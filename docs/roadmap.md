@@ -92,4 +92,4 @@ Known limitations and deliberate trade-offs are tracked in [`docs/tech-debt.md`]
 
 ## Next step
 
-Detail the Phase 1 spec.
+Phase 1 is designed and planned — see [`docs/superpowers/specs/2026-07-31-phase1-foundation-design.md`](superpowers/specs/2026-07-31-phase1-foundation-design.md) and [`docs/superpowers/plans/2026-07-31-phase1-foundation.md`](superpowers/plans/2026-07-31-phase1-foundation.md). Not yet implemented — execute that plan next (via the `superpowers:subagent-driven-development` or `superpowers:executing-plans` skill, as noted in the plan's header).

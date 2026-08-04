@@ -1,0 +1,32 @@
+{
+  "name": "microwave",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [8081, 8082, 8083],
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-boot-dev-pack"
+      ]
+    }
+  },
+
+  // Rootless Podman, reached via its per-user socket (podman-remote or
+  // native podman both use this same path). ${localEnv:XDG_RUNTIME_DIR}
+  // resolves to /run/user/<uid> for whoever runs the setup script, so this
+  // isn't hardcoded to a specific user.
+  "mounts": [
+    "source=${localEnv:XDG_RUNTIME_DIR}/podman/podman.sock,target=${localEnv:XDG_RUNTIME_DIR}/podman/podman.sock,type=bind"
+  ],
+  "containerEnv": {
+    "DOCKER_HOST": "unix://${localEnv:XDG_RUNTIME_DIR}/podman/podman.sock",
+    // Rootless Podman doesn't reliably support Ryuk (Testcontainers' cleanup
+    // sidecar) — disabling it avoids startup failures on the first test run.
+    // Trade-off: leftover test containers aren't auto-cleaned if a test run
+    // crashes; run `podman-remote container prune` occasionally if needed.
+    "TESTCONTAINERS_RYUK_DISABLED": "true"
+  }
+}
