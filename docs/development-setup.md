@@ -20,12 +20,7 @@ Everything (Java 25, Maven, the Java/Spring VS Code extensions) runs inside a co
 
 That's it — `mvn`, `java`, and the Java/Spring extensions are all available inside the integrated terminal, and Testcontainers can reach the container engine without any extra setup.
 
-**If you're on Podman specifically:** point VS Code at `podman-remote` (or `podman`) instead of `docker` — add this to your **personal** VS Code `settings.json` (not part of this repo, since it's specific to your machine):
-```json
-{
-  "dev.containers.dockerPath": "podman-remote"
-}
-```
+No per-machine VS Code settings needed: `.vscode/settings.json` (committed) points `dev.containers.dockerPath` at `.vscode/bin/container-engine`, a small wrapper that detects Docker or Podman at invocation time and forwards to whichever is found. Works the same on Docker or Podman, on any machine, with nothing to configure.
 
 Re-run `./scripts/setup-devcontainer.sh` any time you switch machines or engines — it regenerates `.devcontainer/devcontainer.json` (which is gitignored, since it's a generated file) from the matching template in `.devcontainer/devcontainer-docker.json` / `devcontainer-podman.json`.
 
