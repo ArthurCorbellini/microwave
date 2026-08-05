@@ -4,7 +4,7 @@ Two ways to get a working environment for this project: **Dev Container** (recom
 
 ## Option A — Dev Container (recommended)
 
-Everything (Java 25, Maven, the Java/Spring VS Code extensions) runs inside a container, defined in `.devcontainer/`. Nothing gets installed on your machine directly, and the environment is identical every time, on any machine.
+Everything (Java 25, Maven, the Java/Spring VS Code extensions, the Claude Code extension) runs inside a container, defined in `.devcontainer/`. Nothing gets installed on your machine directly, and the environment is identical every time, on any machine.
 
 **Requirements:** VS Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), and a working Docker or Podman.
 
