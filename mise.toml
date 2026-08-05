@@ -1,0 +1,7 @@
+[tools]
+java = "temurin-25.0.4+7.0.LTS"
+maven = "3.9.16"
+
+# Podman-specific env vars (DOCKER_HOST, TESTCONTAINERS_RYUK_DISABLED) live in
+# mise.local.toml (gitignored), not here — Docker needs neither, and this file
+# is committed/shared. See docs/development-setup.md.

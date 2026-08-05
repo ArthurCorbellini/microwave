@@ -2669,7 +2669,7 @@ git commit -m "feat(orders): standardize error responses"
 
 A learning project: an e-commerce system built incrementally to practice microservices in Java, messaging with RabbitMQ/Kafka, containerization with Docker, and orchestration with Kubernetes.
 
-See [docs/roadmap.md](docs/roadmap.md) for the full roadmap, [docs/tech-debt.md](docs/tech-debt.md) for known limitations, and [docs/development-setup.md](docs/development-setup.md) for how to get a working dev environment (Dev Container or local install).
+See [docs/roadmap.md](docs/roadmap.md) for the full roadmap, [docs/tech-debt.md](docs/tech-debt.md) for known limitations, and [docs/development-setup.md](docs/development-setup.md) for how to get a working dev environment.
 
 ## Phase 1 — Microservices foundation
 
@@ -2681,7 +2681,7 @@ Three independent Spring Boot services, each with its own PostgreSQL database, c
 
 ### Requirements
 
-- Java 25 and Maven (or just use the Dev Container — see [docs/development-setup.md](docs/development-setup.md))
+- Java 25 and Maven, pinned via [mise](https://mise.jdx.dev) — see [docs/development-setup.md](docs/development-setup.md)
 - Docker or Podman (required by Testcontainers for integration tests)
 
 ### Running the tests
