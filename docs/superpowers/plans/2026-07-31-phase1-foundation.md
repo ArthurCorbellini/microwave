@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Java 25 (LTS). Spring Boot pinned to 4.0.7 (not 4.1.x) because Spring Cloud 2025.1.2 — needed for OpenFeign in `orders` — targets 4.0.7; this is the latest release train with confirmed Spring Boot compatibility as of this writing.
+- Java 25 (LTS). Spring Boot pinned to 4.0.7. Spring Cloud 2025.1.2 — needed for OpenFeign in `orders` — supports both Spring Boot 4.0.7 and 4.1.0 as of this writing; 4.0.7 was chosen to stay one minor behind the latest for stability, not due to a compatibility constraint.
 - Maven, no parent POM — each service under `services/` builds independently.
 - PostgreSQL, one database per service. All monetary fields (`price`, `amount`, `totalAmount`) are `BigDecimal`, never `double`/`float`.
 - All code, comments, and docs are in English.
@@ -196,7 +196,7 @@ Add inside `<dependencies>`:
 </dependency>
 <dependency>
     <groupId>org.testcontainers</groupId>
-    <artifactId>junit-jupiter</artifactId>
+    <artifactId>testcontainers-junit-jupiter</artifactId>
     <scope>test</scope>
 </dependency>
 <dependency>
@@ -853,7 +853,7 @@ Add inside `<dependencies>`:
 </dependency>
 <dependency>
     <groupId>org.testcontainers</groupId>
-    <artifactId>junit-jupiter</artifactId>
+    <artifactId>testcontainers-junit-jupiter</artifactId>
     <scope>test</scope>
 </dependency>
 <dependency>
@@ -1604,7 +1604,7 @@ Add inside `<dependencies>` (the `testcontainers-bom` import already exists in `
 </dependency>
 <dependency>
     <groupId>org.testcontainers</groupId>
-    <artifactId>junit-jupiter</artifactId>
+    <artifactId>testcontainers-junit-jupiter</artifactId>
     <scope>test</scope>
 </dependency>
 <dependency>
