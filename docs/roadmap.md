@@ -27,6 +27,8 @@ Comfortable with Java/Spring. RabbitMQ, Kafka, Docker, and Kubernetes are new or
 
 ### Phase 1 — Microservices foundation (synchronous REST)
 
+**Status:** Complete (2026-08-06). All 3 services implemented, tested (unit + Testcontainers integration + WireMock Feign contract tests), and verified end-to-end locally.
+
 Services: `catalog`, `orders`, `payments` (simulated). Spring Boot, one Postgres database per service, REST communication. No messaging, no containers yet — runs locally.
 
 Focus: service boundaries, API contracts, "database per service," tests.
@@ -92,4 +94,4 @@ Known limitations and deliberate trade-offs are tracked in [`docs/tech-debt.md`]
 
 ## Next step
 
-Phase 1 is designed and planned — see [`docs/superpowers/specs/2026-07-31-phase1-foundation-design.md`](superpowers/specs/2026-07-31-phase1-foundation-design.md) and [`docs/superpowers/plans/2026-07-31-phase1-foundation.md`](superpowers/plans/2026-07-31-phase1-foundation.md). Not yet implemented — execute that plan next (via the `superpowers:subagent-driven-development` or `superpowers:executing-plans` skill, as noted in the plan's header).
+Phase 1 is complete — see [`docs/superpowers/specs/2026-07-31-phase1-foundation-design.md`](superpowers/specs/2026-07-31-phase1-foundation-design.md) and [`docs/superpowers/plans/2026-07-31-phase1-foundation.md`](superpowers/plans/2026-07-31-phase1-foundation.md) for the design and plan it was built from. Phase 2 (containerization) is next, and starts with its own brainstorm → spec → plan cycle.
