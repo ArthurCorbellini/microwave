@@ -1,6 +1,7 @@
 package com.microwave.payments.payment;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -9,7 +10,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,6 +40,14 @@ class PaymentControllerTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("APPROVED"));
+
+        // Assert on the Payment actually handed to the repository, not on what the
+        // stub was told to return — otherwise the test only proves the stub echoes back.
+        ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(PaymentStatus.APPROVED);
+        assertThat(captor.getValue().getOrderId()).isEqualTo(1L);
+        assertThat(captor.getValue().getAmount()).isEqualByComparingTo("100.00");
     }
 
     @Test
@@ -51,6 +62,27 @@ class PaymentControllerTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("REJECTED"));
+
+        ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(PaymentStatus.REJECTED);
+        assertThat(captor.getValue().getOrderId()).isEqualTo(2L);
+        assertThat(captor.getValue().getAmount()).isEqualByComparingTo("15000.00");
+    }
+
+    @Test
+    void rejectsPaymentWithNullOrderId() throws Exception {
+        mockMvc.perform(post("/payments")
+                        .contentType("application/json")
+                        .content("""
+                                {"amount":100.00}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.path").value("/payments"))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test

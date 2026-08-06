@@ -11,8 +11,10 @@ import feign.Request;
 import feign.Response;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +23,6 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -61,15 +62,29 @@ class OrderServiceTest {
         initService();
         when(catalogClient.getProduct(1L))
                 .thenReturn(new ProductDto(1L, "Keyboard", "Mechanical keyboard", new BigDecimal("100.00")));
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        // Simulate the id the database assigns on insert, so the payment request
+        // below is checked against a real order id rather than null == null.
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order persisted = invocation.getArgument(0);
+            ReflectionTestUtils.setField(persisted, "id", 42L);
+            return persisted;
+        });
         when(paymentsClient.charge(any(PaymentRequestDto.class)))
-                .thenReturn(new PaymentResponseDto(1L, 100L, new BigDecimal("200.00"), PaymentStatusDto.APPROVED));
+                .thenReturn(new PaymentResponseDto(1L, 42L, new BigDecimal("200.00"), PaymentStatusDto.APPROVED));
 
         Order order = orderService.createOrder(1L, 2);
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
         assertThat(order.getTotalAmount()).isEqualByComparingTo("200.00");
         verify(orderRepository, times(2)).save(any(Order.class));
+
+        // The order -> PaymentRequestDto mapping is the actual contract with payments,
+        // where orderId is @NotNull — assert it instead of accepting any() request.
+        ArgumentCaptor<PaymentRequestDto> paymentCaptor = ArgumentCaptor.forClass(PaymentRequestDto.class);
+        verify(paymentsClient).charge(paymentCaptor.capture());
+        assertThat(paymentCaptor.getValue().orderId()).isEqualTo(42L);
+        assertThat(paymentCaptor.getValue().orderId()).isEqualTo(order.getId());
+        assertThat(paymentCaptor.getValue().amount()).isEqualByComparingTo(order.getTotalAmount());
     }
 
     @Test

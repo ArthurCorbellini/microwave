@@ -12,8 +12,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -52,5 +54,12 @@ class PaymentsClientIT {
 
         assertThat(response.status()).isEqualTo(PaymentStatusDto.APPROVED);
         assertThat(response.amount()).isEqualByComparingTo("100.00");
+
+        // Also pin the outgoing contract: payments' PaymentRequest.orderId is @NotNull,
+        // so a broken serialization would surface there as a 400, not here.
+        wireMockServer.verify(postRequestedFor(urlEqualTo("/payments"))
+                .withRequestBody(equalToJson("""
+                        {"orderId":42,"amount":100.00}
+                        """)));
     }
 }
