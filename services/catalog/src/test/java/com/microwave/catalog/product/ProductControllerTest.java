@@ -48,7 +48,12 @@ class ProductControllerTest {
                         .content("""
                                 {"name":"","description":"Mechanical keyboard","price":350.00}
                                 """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.path").value("/products"))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
