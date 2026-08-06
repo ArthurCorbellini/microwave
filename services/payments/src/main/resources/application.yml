@@ -4,3 +4,11 @@ server:
 spring:
   application:
     name: payments
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payments_db
+    username: payments
+    password: payments
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
