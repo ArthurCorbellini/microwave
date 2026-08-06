@@ -9,6 +9,8 @@ import com.microwave.orders.payments.PaymentsClient;
 import feign.FeignException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import java.math.BigDecimal;
 
 @Service
@@ -57,5 +59,14 @@ public class OrderService {
         } catch (FeignException ex) {
             throw new UpstreamServiceUnavailableException("payments", ex);
         }
+    }
+
+    public Order findById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException(id));
+    }
+
+    public List<Order> findAll() {
+        return orderRepository.findAll();
     }
 }

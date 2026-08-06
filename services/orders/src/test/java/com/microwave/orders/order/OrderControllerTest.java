@@ -1,0 +1,70 @@
+package com.microwave.orders.order;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(OrderController.class)
+class OrderControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private OrderService orderService;
+
+    @Test
+    void createsOrder() throws Exception {
+        Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CONFIRMED);
+        when(orderService.createOrder(1L, 2)).thenReturn(order);
+
+        mockMvc.perform(post("/orders")
+                        .contentType("application/json")
+                        .content("""
+                                {"productId":1,"quantity":2}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("CONFIRMED"));
+    }
+
+    @Test
+    void rejectsOrderWithZeroQuantity() throws Exception {
+        mockMvc.perform(post("/orders")
+                        .contentType("application/json")
+                        .content("""
+                                {"productId":1,"quantity":0}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getsOrderById() throws Exception {
+        Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CONFIRMED);
+        when(orderService.findById(1L)).thenReturn(order);
+
+        mockMvc.perform(get("/orders/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CONFIRMED"));
+    }
+
+    @Test
+    void listsOrders() throws Exception {
+        Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CONFIRMED);
+        when(orderService.findAll()).thenReturn(List.of(order));
+
+        mockMvc.perform(get("/orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("CONFIRMED"));
+    }
+}
