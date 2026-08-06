@@ -364,6 +364,7 @@ git commit -m "feat(catalog): add Product entity and repository"
 - Create: `services/catalog/src/main/java/com/microwave/catalog/product/ProductRequest.java`
 - Create: `services/catalog/src/main/java/com/microwave/catalog/product/ProductResponse.java`
 - Create: `services/catalog/src/main/java/com/microwave/catalog/product/ProductController.java`
+- Modify: `services/catalog/pom.xml` (add `spring-boot-webmvc-test`, required for `@WebMvcTest` in Spring Boot 4.0's split test-autoconfigure modules)
 - Test: `services/catalog/src/test/java/com/microwave/catalog/product/ProductControllerTest.java`
 
 **Interfaces:**
@@ -377,7 +378,7 @@ package com.microwave.catalog.product;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -729,6 +730,11 @@ git commit -m "feat(catalog): standardize error responses"
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -1128,7 +1134,7 @@ package com.microwave.payments.payment;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -1486,6 +1492,11 @@ git commit -m "feat(payments): standardize error responses"
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -2352,7 +2363,7 @@ package com.microwave.orders.order;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
