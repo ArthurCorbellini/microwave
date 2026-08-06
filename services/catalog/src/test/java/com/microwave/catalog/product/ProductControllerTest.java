@@ -66,7 +66,10 @@ class ProductControllerTest {
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/products/99"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.path").value("/products/99"));
     }
 
     @Test
