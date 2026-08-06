@@ -15,7 +15,7 @@
 - PostgreSQL, one database per service. All monetary fields (`price`, `amount`, `totalAmount`) are `BigDecimal`, never `double`/`float`.
 - All code, comments, and docs are in English.
 - OpenFeign is used only in `orders`. Service addresses are fixed URLs via `application.yml` config properties — no Eureka, no service discovery.
-- Testing: JUnit 5 + Testcontainers for integration tests against a real Postgres; MockMvc for controller-layer tests; Mockito for service-layer unit tests with mocked collaborators.
+- Testing: JUnit 5 + Testcontainers for integration tests against a real Postgres; MockMvc for controller-layer tests; Mockito for service-layer unit tests with mocked collaborators. `*IT` classes (e.g. `ProductRepositoryIT`) are Testcontainers integration tests bound to the `maven-failsafe-plugin`, not Surefire — Surefire's default include pattern excludes `*IT.java`, so a bare `mvn test` silently skips them. Each service's `pom.xml` configures `maven-failsafe-plugin` (added at scaffold time) so `mvn verify` runs both unit and integration tests together; "run the full test suite" steps in this plan use `verify`, not `test`.
 - Error responses use a standardized body — `{timestamp, status, error, message, path}` — returned via `@RestControllerAdvice` in each service.
 - Known, deliberate limitation: if `payments` is unreachable during order creation, the order stays persisted with `status=CREATED` and is not rolled back. This is documented as TD-1 in `docs/tech-debt.md` and must NOT be "fixed" as part of this plan — the tasks below implement it as specified, including the test that proves the order survives.
 - Git: commit messages follow Conventional Commits (as already written in each task's commit step below); never add a `Co-Authored-By` line; never run `git push` unless explicitly asked in that message.
@@ -745,6 +745,18 @@ git commit -m "feat(catalog): standardize error responses"
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
@@ -1405,8 +1417,8 @@ Expected: PASS
 
 - [ ] **Step 8: Run the full payments test suite**
 
-Run: `mvn -f services/payments/pom.xml test`
-Expected: all tests PASS
+Run: `mvn -f services/payments/pom.xml verify`
+Expected: all tests PASS, including `PaymentRepositoryIT` (bare `mvn test` skips `*IT` classes under Surefire's default excludes — `verify` runs them via the `maven-failsafe-plugin` configured in Task 5)
 
 - [ ] **Step 9: Commit**
 
@@ -1506,6 +1518,18 @@ git commit -m "feat(payments): standardize error responses"
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -2651,8 +2675,8 @@ Expected: PASS
 
 - [ ] **Step 6: Run the full orders test suite**
 
-Run: `mvn -f services/orders/pom.xml test`
-Expected: all tests PASS
+Run: `mvn -f services/orders/pom.xml verify`
+Expected: all tests PASS, including `OrderRepositoryIT` (bare `mvn test` skips `*IT` classes under Surefire's default excludes — `verify` runs them via the `maven-failsafe-plugin` configured in Task 10)
 
 - [ ] **Step 7: Commit**
 
