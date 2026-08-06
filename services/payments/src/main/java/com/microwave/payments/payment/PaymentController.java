@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/payments")
@@ -32,8 +31,7 @@ public class PaymentController {
     @GetMapping("/{orderId}")
     public PaymentResponse getByOrderId(@PathVariable Long orderId) {
         Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Payment not found for order: " + orderId));
+                .orElseThrow(() -> new PaymentNotFoundException(orderId));
         return PaymentResponse.from(payment);
     }
 }

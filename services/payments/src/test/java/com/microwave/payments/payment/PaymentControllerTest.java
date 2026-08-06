@@ -68,6 +68,9 @@ class PaymentControllerTest {
         when(paymentRepository.findByOrderId(99L)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/payments/99"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.path").value("/payments/99"));
     }
 }
