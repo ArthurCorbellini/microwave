@@ -667,8 +667,8 @@ Expected: PASS
 
 - [ ] **Step 8: Run the full catalog test suite**
 
-Run: `mvn -f services/catalog/pom.xml test`
-Expected: all tests PASS
+Run: `mvn -f services/catalog/pom.xml verify`
+Expected: all tests PASS, including `ProductRepositoryIT` (bare `mvn test` skips `*IT` classes under Surefire's default excludes — `verify` runs them via the `maven-failsafe-plugin`, added to `services/catalog/pom.xml` as part of this task's fix round)
 
 - [ ] **Step 9: Commit**
 
@@ -1890,7 +1890,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
+        "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration"
 })
 class CatalogClientIT {
 
@@ -1984,7 +1984,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
+        "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration"
 })
 class PaymentsClientIT {
 
