@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -66,5 +67,40 @@ class OrderControllerTest {
         mockMvc.perform(get("/orders"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("CONFIRMED"));
+    }
+
+    @Test
+    void returnsNotFoundForMissingOrder() throws Exception {
+        when(orderService.findById(99L)).thenThrow(new OrderNotFoundException(99L));
+
+        mockMvc.perform(get("/orders/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.path").value("/orders/99"));
+    }
+
+    @Test
+    void returnsNotFoundWhenProductMissing() throws Exception {
+        doThrow(new ProductNotFoundException(1L)).when(orderService).createOrder(1L, 2);
+
+        mockMvc.perform(post("/orders")
+                        .contentType("application/json")
+                        .content("""
+                                {"productId":1,"quantity":2}
+                                """))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void returnsServiceUnavailableWhenUpstreamFails() throws Exception {
+        doThrow(new UpstreamServiceUnavailableException("payments", new RuntimeException("boom")))
+                .when(orderService).createOrder(1L, 2);
+
+        mockMvc.perform(post("/orders")
+                        .contentType("application/json")
+                        .content("""
+                                {"productId":1,"quantity":2}
+                                """))
+                .andExpect(status().isServiceUnavailable());
     }
 }
