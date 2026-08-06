@@ -2721,12 +2721,12 @@ Three independent Spring Boot services, each with its own PostgreSQL database, c
 
 ### Running the tests
 
-Each service is an independent Maven module:
+Each service is an independent Maven module. Use `verify`, not `test` — Testcontainers-backed integration tests (`*IT` classes) are bound to the `maven-failsafe-plugin` and are skipped by Surefire's default `test` phase:
 
 \`\`\`bash
-mvn -f services/catalog/pom.xml test
-mvn -f services/payments/pom.xml test
-mvn -f services/orders/pom.xml test
+mvn -f services/catalog/pom.xml verify
+mvn -f services/payments/pom.xml verify
+mvn -f services/orders/pom.xml verify
 \`\`\`
 
 ### Running a service locally
