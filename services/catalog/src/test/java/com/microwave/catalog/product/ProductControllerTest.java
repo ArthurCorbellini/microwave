@@ -20,70 +20,70 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ProductController.class)
 class ProductControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-    @MockitoBean
-    private ProductRepository productRepository;
+  @MockitoBean
+  private ProductRepository productRepository;
 
-    @Test
-    void createsProduct() throws Exception {
-        Product saved = new Product("Keyboard", "Mechanical keyboard", new BigDecimal("350.00"));
-        when(productRepository.save(any(Product.class))).thenReturn(saved);
+  @Test
+  void createsProduct() throws Exception {
+    Product saved = new Product("Keyboard", "Mechanical keyboard", new BigDecimal("350.00"));
+    when(productRepository.save(any(Product.class))).thenReturn(saved);
 
-        mockMvc.perform(post("/products")
-                        .contentType("application/json")
-                        .content("""
-                                {"name":"Keyboard","description":"Mechanical keyboard","price":350.00}
-                                """))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Keyboard"))
-                .andExpect(jsonPath("$.price").value(350.00));
-    }
+    mockMvc.perform(post("/products")
+            .contentType("application/json")
+            .content("""
+                {"name":"Keyboard","description":"Mechanical keyboard","price":350.00}
+                """))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.name").value("Keyboard"))
+        .andExpect(jsonPath("$.price").value(350.00));
+  }
 
-    @Test
-    void rejectsProductWithBlankName() throws Exception {
-        mockMvc.perform(post("/products")
-                        .contentType("application/json")
-                        .content("""
-                                {"name":"","description":"Mechanical keyboard","price":350.00}
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.path").value("/products"))
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.message").exists());
-    }
+  @Test
+  void rejectsProductWithBlankName() throws Exception {
+    mockMvc.perform(post("/products")
+            .contentType("application/json")
+            .content("""
+                {"name":"","description":"Mechanical keyboard","price":350.00}
+                """))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(jsonPath("$.path").value("/products"))
+        .andExpect(jsonPath("$.timestamp").exists())
+        .andExpect(jsonPath("$.message").exists());
+  }
 
-    @Test
-    void getsProductById() throws Exception {
-        Product product = new Product("Keyboard", "Mechanical keyboard", new BigDecimal("350.00"));
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+  @Test
+  void getsProductById() throws Exception {
+    Product product = new Product("Keyboard", "Mechanical keyboard", new BigDecimal("350.00"));
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        mockMvc.perform(get("/products/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Keyboard"));
-    }
+    mockMvc.perform(get("/products/1"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value("Keyboard"));
+  }
 
-    @Test
-    void returnsNotFoundForMissingProduct() throws Exception {
-        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+  @Test
+  void returnsNotFoundForMissingProduct() throws Exception {
+    when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/products/99"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.path").value("/products/99"));
-    }
+    mockMvc.perform(get("/products/99"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.status").value(404))
+        .andExpect(jsonPath("$.error").value("Not Found"))
+        .andExpect(jsonPath("$.path").value("/products/99"));
+  }
 
-    @Test
-    void listsProducts() throws Exception {
-        Product product = new Product("Keyboard", "Mechanical keyboard", new BigDecimal("350.00"));
-        when(productRepository.findAll()).thenReturn(List.of(product));
+  @Test
+  void listsProducts() throws Exception {
+    Product product = new Product("Keyboard", "Mechanical keyboard", new BigDecimal("350.00"));
+    when(productRepository.findAll()).thenReturn(List.of(product));
 
-        mockMvc.perform(get("/products"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Keyboard"));
-    }
+    mockMvc.perform(get("/products"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].name").value("Keyboard"));
+  }
 }
