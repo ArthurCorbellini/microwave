@@ -15,7 +15,7 @@
 - PostgreSQL, one database per service. All monetary fields (`price`, `amount`, `totalAmount`) are `BigDecimal`, never `double`/`float`.
 - All code, comments, and docs are in English.
 - OpenFeign is used only in `orders`. Service addresses are fixed URLs via `application.yml` config properties — no Eureka, no service discovery.
-- Testing: JUnit 5 + Testcontainers for integration tests against a real Postgres; MockMvc for controller-layer tests; Mockito for service-layer unit tests with mocked collaborators.
+- Testing: JUnit 5 + Testcontainers for integration tests against a real Postgres; MockMvc for controller-layer tests; Mockito for service-layer unit tests with mocked collaborators. `*IT` classes (e.g. `ProductRepositoryIT`) are Testcontainers integration tests bound to the `maven-failsafe-plugin`, not Surefire — Surefire's default include pattern excludes `*IT.java`, so a bare `mvn test` silently skips them. Each service's `pom.xml` configures `maven-failsafe-plugin` (added at scaffold time) so `mvn verify` runs both unit and integration tests together; "run the full test suite" steps in this plan use `verify`, not `test`.
 - Error responses use a standardized body — `{timestamp, status, error, message, path}` — returned via `@RestControllerAdvice` in each service.
 - Known, deliberate limitation: if `payments` is unreachable during order creation, the order stays persisted with `status=CREATED` and is not rolled back. This is documented as TD-1 in `docs/tech-debt.md` and must NOT be "fixed" as part of this plan — the tasks below implement it as specified, including the test that proves the order survives.
 - Git: commit messages follow Conventional Commits (as already written in each task's commit step below); never add a `Co-Authored-By` line; never run `git push` unless explicitly asked in that message.
@@ -364,6 +364,7 @@ git commit -m "feat(catalog): add Product entity and repository"
 - Create: `services/catalog/src/main/java/com/microwave/catalog/product/ProductRequest.java`
 - Create: `services/catalog/src/main/java/com/microwave/catalog/product/ProductResponse.java`
 - Create: `services/catalog/src/main/java/com/microwave/catalog/product/ProductController.java`
+- Modify: `services/catalog/pom.xml` (add `spring-boot-webmvc-test`, required for `@WebMvcTest` in Spring Boot 4.0's split test-autoconfigure modules)
 - Test: `services/catalog/src/test/java/com/microwave/catalog/product/ProductControllerTest.java`
 
 **Interfaces:**
@@ -377,7 +378,7 @@ package com.microwave.catalog.product;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -666,8 +667,8 @@ Expected: PASS
 
 - [ ] **Step 8: Run the full catalog test suite**
 
-Run: `mvn -f services/catalog/pom.xml test`
-Expected: all tests PASS
+Run: `mvn -f services/catalog/pom.xml verify`
+Expected: all tests PASS, including `ProductRepositoryIT` (bare `mvn test` skips `*IT` classes under Surefire's default excludes — `verify` runs them via the `maven-failsafe-plugin`, added to `services/catalog/pom.xml` as part of this task's fix round)
 
 - [ ] **Step 9: Commit**
 
@@ -731,6 +732,11 @@ git commit -m "feat(catalog): standardize error responses"
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -738,6 +744,18 @@ git commit -m "feat(catalog): standardize error responses"
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -1128,7 +1146,7 @@ package com.microwave.payments.payment;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -1399,8 +1417,8 @@ Expected: PASS
 
 - [ ] **Step 8: Run the full payments test suite**
 
-Run: `mvn -f services/payments/pom.xml test`
-Expected: all tests PASS
+Run: `mvn -f services/payments/pom.xml verify`
+Expected: all tests PASS, including `PaymentRepositoryIT` (bare `mvn test` skips `*IT` classes under Surefire's default excludes — `verify` runs them via the `maven-failsafe-plugin` configured in Task 5)
 
 - [ ] **Step 9: Commit**
 
@@ -1488,6 +1506,11 @@ git commit -m "feat(payments): standardize error responses"
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -1495,6 +1518,18 @@ git commit -m "feat(payments): standardize error responses"
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -1855,7 +1890,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
+        "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration"
 })
 class CatalogClientIT {
 
@@ -1949,7 +1984,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
+        "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration"
 })
 class PaymentsClientIT {
 
@@ -2352,7 +2387,7 @@ package com.microwave.orders.order;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -2640,8 +2675,8 @@ Expected: PASS
 
 - [ ] **Step 6: Run the full orders test suite**
 
-Run: `mvn -f services/orders/pom.xml test`
-Expected: all tests PASS
+Run: `mvn -f services/orders/pom.xml verify`
+Expected: all tests PASS, including `OrderRepositoryIT` (bare `mvn test` skips `*IT` classes under Surefire's default excludes — `verify` runs them via the `maven-failsafe-plugin` configured in Task 10)
 
 - [ ] **Step 7: Commit**
 
@@ -2686,12 +2721,12 @@ Three independent Spring Boot services, each with its own PostgreSQL database, c
 
 ### Running the tests
 
-Each service is an independent Maven module:
+Each service is an independent Maven module. Use `verify`, not `test` — Testcontainers-backed integration tests (`*IT` classes) are bound to the `maven-failsafe-plugin` and are skipped by Surefire's default `test` phase:
 
 \`\`\`bash
-mvn -f services/catalog/pom.xml test
-mvn -f services/payments/pom.xml test
-mvn -f services/orders/pom.xml test
+mvn -f services/catalog/pom.xml verify
+mvn -f services/payments/pom.xml verify
+mvn -f services/orders/pom.xml verify
 \`\`\`
 
 ### Running a service locally
