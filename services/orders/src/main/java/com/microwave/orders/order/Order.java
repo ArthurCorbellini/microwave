@@ -1,5 +1,6 @@
 package com.microwave.orders.order;
 
+import com.microwave.orders.order.enums.OrderStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,54 +16,54 @@ import java.math.BigDecimal;
 @Table(name = "orders")
 public class Order {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false)
-    private Long productId;
+  @Column(nullable = false)
+  private Long productId;
 
-    @Column(nullable = false)
-    private int quantity;
+  @Column(nullable = false)
+  private int quantity;
 
-    @Column(nullable = false)
-    private BigDecimal totalAmount;
+  @Column(nullable = false)
+  private BigDecimal totalAmount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private OrderStatus status;
 
-    protected Order() {
-    }
+  protected Order() {
+  }
 
-    public Order(Long productId, int quantity, BigDecimal totalAmount, OrderStatus status) {
-        this.productId = productId;
-        this.quantity = quantity;
-        this.totalAmount = totalAmount;
-        this.status = status;
-    }
+  public Order(Long productId, int quantity, BigDecimal totalAmount, OrderStatus status) {
+    this.productId = productId;
+    this.quantity = quantity;
+    this.totalAmount = totalAmount;
+    this.status = status;
+  }
 
-    public void updateStatus(OrderStatus status) {
-        this.status = status;
-    }
+  public void updateStatus(OrderStatus status) {
+    this.status = status;
+  }
 
-    public Long getId() {
-        return id;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public Long getProductId() {
-        return productId;
-    }
+  public Long getProductId() {
+    return productId;
+  }
 
-    public int getQuantity() {
-        return quantity;
-    }
+  public int getQuantity() {
+    return quantity;
+  }
 
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
+  public BigDecimal getTotalAmount() {
+    return totalAmount;
+  }
 
-    public OrderStatus getStatus() {
-        return status;
-    }
+  public OrderStatus getStatus() {
+    return status;
+  }
 }

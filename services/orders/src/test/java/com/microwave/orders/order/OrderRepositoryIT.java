@@ -1,5 +1,6 @@
 package com.microwave.orders.order;
 
+import com.microwave.orders.order.enums.OrderStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,41 +19,41 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 class OrderRepositoryIT {
 
-    @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+  @Container
+  static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
 
-    @DynamicPropertySource
-    static void configureDatasource(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+  @DynamicPropertySource
+  static void configureDatasource(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+  }
 
-    @Autowired
-    private OrderRepository orderRepository;
+  @Autowired
+  private OrderRepository orderRepository;
 
-    @Test
-    void savesAndFindsOrder() {
-        Order saved = orderRepository.save(
-                new Order(1L, 2, new BigDecimal("700.00"), OrderStatus.CREATED));
+  @Test
+  void savesAndFindsOrder() {
+    Order saved = orderRepository.save(
+        new Order(1L, 2, new BigDecimal("700.00"), OrderStatus.CREATED));
 
-        Optional<Order> found = orderRepository.findById(saved.getId());
+    Optional<Order> found = orderRepository.findById(saved.getId());
 
-        assertThat(found).isPresent();
-        assertThat(found.get().getStatus()).isEqualTo(OrderStatus.CREATED);
-        assertThat(found.get().getTotalAmount()).isEqualByComparingTo("700.00");
-    }
+    assertThat(found).isPresent();
+    assertThat(found.get().getStatus()).isEqualTo(OrderStatus.CREATED);
+    assertThat(found.get().getTotalAmount()).isEqualByComparingTo("700.00");
+  }
 
-    @Test
-    void updatesOrderStatus() {
-        Order saved = orderRepository.save(
-                new Order(1L, 2, new BigDecimal("700.00"), OrderStatus.CREATED));
+  @Test
+  void updatesOrderStatus() {
+    Order saved = orderRepository.save(
+        new Order(1L, 2, new BigDecimal("700.00"), OrderStatus.CREATED));
 
-        saved.updateStatus(OrderStatus.CONFIRMED);
-        orderRepository.save(saved);
+    saved.updateStatus(OrderStatus.CONFIRMED);
+    orderRepository.save(saved);
 
-        Optional<Order> found = orderRepository.findById(saved.getId());
-        assertThat(found).isPresent();
-        assertThat(found.get().getStatus()).isEqualTo(OrderStatus.CONFIRMED);
-    }
+    Optional<Order> found = orderRepository.findById(saved.getId());
+    assertThat(found).isPresent();
+    assertThat(found.get().getStatus()).isEqualTo(OrderStatus.CONFIRMED);
+  }
 }

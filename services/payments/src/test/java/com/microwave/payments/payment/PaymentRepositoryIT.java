@@ -1,5 +1,6 @@
 package com.microwave.payments.payment;
 
+import com.microwave.payments.payment.enums.PaymentStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,27 +19,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 class PaymentRepositoryIT {
 
-    @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+  @Container
+  static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
 
-    @DynamicPropertySource
-    static void configureDatasource(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+  @DynamicPropertySource
+  static void configureDatasource(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+  }
 
-    @Autowired
-    private PaymentRepository paymentRepository;
+  @Autowired
+  private PaymentRepository paymentRepository;
 
-    @Test
-    void savesAndFindsPaymentByOrderId() {
-        paymentRepository.save(new Payment(42L, new BigDecimal("100.00"), PaymentStatus.APPROVED));
+  @Test
+  void savesAndFindsPaymentByOrderId() {
+    paymentRepository.save(new Payment(42L, new BigDecimal("100.00"), PaymentStatus.APPROVED));
 
-        Optional<Payment> found = paymentRepository.findByOrderId(42L);
+    Optional<Payment> found = paymentRepository.findByOrderId(42L);
 
-        assertThat(found).isPresent();
-        assertThat(found.get().getStatus()).isEqualTo(PaymentStatus.APPROVED);
-        assertThat(found.get().getAmount()).isEqualByComparingTo("100.00");
-    }
+    assertThat(found).isPresent();
+    assertThat(found.get().getStatus()).isEqualTo(PaymentStatus.APPROVED);
+    assertThat(found.get().getAmount()).isEqualByComparingTo("100.00");
+  }
 }

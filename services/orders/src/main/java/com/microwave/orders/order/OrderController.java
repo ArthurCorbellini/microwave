@@ -1,5 +1,7 @@
 package com.microwave.orders.order;
 
+import com.microwave.orders.order.dto.OrderRequest;
+import com.microwave.orders.order.dto.OrderResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,28 +18,28 @@ import java.util.List;
 @RequestMapping("/orders")
 public class OrderController {
 
-    private final OrderService orderService;
+  private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
+  public OrderController(OrderService orderService) {
+    this.orderService = orderService;
+  }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse createOrder(@Valid @RequestBody OrderRequest request) {
-        Order order = orderService.createOrder(request.productId(), request.quantity());
-        return OrderResponse.from(order);
-    }
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public OrderResponse createOrder(@Valid @RequestBody OrderRequest request) {
+    Order order = orderService.createOrder(request.productId(), request.quantity());
+    return OrderResponse.from(order);
+  }
 
-    @GetMapping("/{id}")
-    public OrderResponse getOrder(@PathVariable Long id) {
-        return OrderResponse.from(orderService.findById(id));
-    }
+  @GetMapping("/{id}")
+  public OrderResponse getOrder(@PathVariable Long id) {
+    return OrderResponse.from(orderService.findById(id));
+  }
 
-    @GetMapping
-    public List<OrderResponse> listOrders() {
-        return orderService.findAll().stream()
-                .map(OrderResponse::from)
-                .toList();
-    }
+  @GetMapping
+  public List<OrderResponse> listOrders() {
+    return orderService.findAll().stream()
+        .map(OrderResponse::from)
+        .toList();
+  }
 }

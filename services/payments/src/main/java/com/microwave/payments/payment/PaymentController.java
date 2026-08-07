@@ -1,5 +1,10 @@
 package com.microwave.payments.payment;
 
+import com.microwave.payments.payment.dto.PaymentRequest;
+import com.microwave.payments.payment.dto.PaymentResponse;
+import com.microwave.payments.payment.enums.PaymentStatus;
+import com.microwave.payments.payment.exceptions.PaymentNotFoundException;
+import com.microwave.payments.payment.util.PaymentSimulator;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,24 +19,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/payments")
 public class PaymentController {
 
-    private final PaymentRepository paymentRepository;
+  private final PaymentRepository paymentRepository;
 
-    public PaymentController(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
-    }
+  public PaymentController(PaymentRepository paymentRepository) {
+    this.paymentRepository = paymentRepository;
+  }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public PaymentResponse charge(@Valid @RequestBody PaymentRequest request) {
-        PaymentStatus status = PaymentSimulator.decide(request.amount());
-        Payment payment = paymentRepository.save(new Payment(request.orderId(), request.amount(), status));
-        return PaymentResponse.from(payment);
-    }
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public PaymentResponse charge(@Valid @RequestBody PaymentRequest request) {
+    PaymentStatus status = PaymentSimulator.decide(request.amount());
+    Payment payment = paymentRepository.save(new Payment(request.orderId(), request.amount(), status));
+    return PaymentResponse.from(payment);
+  }
 
-    @GetMapping("/{orderId}")
-    public PaymentResponse getByOrderId(@PathVariable Long orderId) {
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new PaymentNotFoundException(orderId));
-        return PaymentResponse.from(payment);
-    }
+  @GetMapping("/{orderId}")
+  public PaymentResponse getByOrderId(@PathVariable Long orderId) {
+    Payment payment = paymentRepository.findByOrderId(orderId)
+        .orElseThrow(() -> new PaymentNotFoundException(orderId));
+    return PaymentResponse.from(payment);
+  }
 }
