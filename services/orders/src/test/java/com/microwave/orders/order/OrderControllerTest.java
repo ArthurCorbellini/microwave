@@ -52,10 +52,10 @@ class OrderControllerTest {
                 """))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.status").value(400))
-        .andExpect(jsonPath("$.error").value("Bad Request"))
-        .andExpect(jsonPath("$.path").value("/orders"))
-        .andExpect(jsonPath("$.timestamp").exists())
-        .andExpect(jsonPath("$.message").exists());
+        .andExpect(jsonPath("$.title").value("Bad Request"))
+        .andExpect(jsonPath("$.instance").value("/orders"))
+        .andExpect(jsonPath("$.errors[0].field").value("quantity"))
+        .andExpect(jsonPath("$.errors[0].message").value("must be greater than or equal to 1"));
   }
 
   @Test
@@ -85,7 +85,7 @@ class OrderControllerTest {
     mockMvc.perform(get("/orders/99"))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.status").value(404))
-        .andExpect(jsonPath("$.path").value("/orders/99"));
+        .andExpect(jsonPath("$.instance").value("/orders/99"));
   }
 
   @Test

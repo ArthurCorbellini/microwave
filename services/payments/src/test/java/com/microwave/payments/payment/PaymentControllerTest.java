@@ -80,10 +80,10 @@ class PaymentControllerTest {
                 """))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.status").value(400))
-        .andExpect(jsonPath("$.error").value("Bad Request"))
-        .andExpect(jsonPath("$.path").value("/payments"))
-        .andExpect(jsonPath("$.timestamp").exists())
-        .andExpect(jsonPath("$.message").exists());
+        .andExpect(jsonPath("$.title").value("Bad Request"))
+        .andExpect(jsonPath("$.instance").value("/payments"))
+        .andExpect(jsonPath("$.errors[0].field").value("orderId"))
+        .andExpect(jsonPath("$.errors[0].message").value("must not be null"));
   }
 
   @Test
@@ -103,7 +103,8 @@ class PaymentControllerTest {
     mockMvc.perform(get("/payments/99"))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.status").value(404))
-        .andExpect(jsonPath("$.error").value("Not Found"))
-        .andExpect(jsonPath("$.path").value("/payments/99"));
+        .andExpect(jsonPath("$.title").value("Not Found"))
+        .andExpect(jsonPath("$.detail").value("Payment not found for order: 99"))
+        .andExpect(jsonPath("$.instance").value("/payments/99"));
   }
 }
