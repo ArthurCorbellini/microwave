@@ -35,6 +35,12 @@ Each service expects a local PostgreSQL database matching its `application.yml` 
 mvn -f services/catalog/pom.xml spring-boot:run
 ```
 
+Each service exposes interactive API docs (Swagger UI, generated from its endpoints via `springdoc-openapi`) once it's running:
+
+- `catalog`: http://localhost:8081/swagger-ui/index.html
+- `payments`: http://localhost:8082/swagger-ui/index.html
+- `orders`: http://localhost:8083/swagger-ui/index.html
+
 ### Trying the end-to-end flow
 
 This is a **one-off manual verification setup**, not the regular dev workflow — tests get their own throwaway databases from Testcontainers (see [docs/development-setup.md](docs/development-setup.md)), so nothing here is needed to run `mvn verify`. Use it only when you want to exercise the real `catalog → orders → payments` chain over HTTP by hand.
