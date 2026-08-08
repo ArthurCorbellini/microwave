@@ -1,5 +1,6 @@
 package com.microwave.orders.order;
 
+import com.microwave.orders.error.ValidationProblemDetail;
 import com.microwave.orders.order.dto.OrderRequest;
 import com.microwave.orders.order.dto.OrderResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +36,7 @@ public class OrderController {
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Order created (confirmed or rejected by payments)"),
       @ApiResponse(responseCode = "400", description = "Validation failure",
-          content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+          content = @Content(schema = @Schema(implementation = ValidationProblemDetail.class))),
       @ApiResponse(responseCode = "404", description = "Product not found in catalog",
           content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
       @ApiResponse(responseCode = "503", description = "catalog or payments is unreachable",

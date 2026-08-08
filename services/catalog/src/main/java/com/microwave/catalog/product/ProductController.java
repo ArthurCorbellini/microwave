@@ -2,6 +2,7 @@ package com.microwave.catalog.product;
 
 import com.microwave.catalog.product.dto.ProductRequest;
 import com.microwave.catalog.product.dto.ProductResponse;
+import com.microwave.catalog.error.ValidationProblemDetail;
 import com.microwave.catalog.product.exceptions.ProductNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -57,7 +58,7 @@ public class ProductController {
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Product created successfully"),
       @ApiResponse(responseCode = "400", description = "Validation failure",
-          content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+          content = @Content(schema = @Schema(implementation = ValidationProblemDetail.class)))
   })
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)

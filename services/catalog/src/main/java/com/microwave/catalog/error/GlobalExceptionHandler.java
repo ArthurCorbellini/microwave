@@ -18,13 +18,11 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ProblemDetail handleValidationFailure(MethodArgumentNotValidException ex) {
+  public ValidationProblemDetail handleValidationFailure(MethodArgumentNotValidException ex) {
     List<FieldErrorDetail> errors = ex.getBindingResult().getFieldErrors().stream()
         .map(error -> new FieldErrorDetail(error.getField(), error.getDefaultMessage()))
         .toList();
 
-    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
-    problem.setProperty("errors", errors);
-    return problem;
+    return new ValidationProblemDetail(HttpStatus.BAD_REQUEST, "Validation failed", errors);
   }
 }

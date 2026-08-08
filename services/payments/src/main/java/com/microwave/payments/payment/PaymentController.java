@@ -3,6 +3,7 @@ package com.microwave.payments.payment;
 import com.microwave.payments.payment.dto.PaymentRequest;
 import com.microwave.payments.payment.dto.PaymentResponse;
 import com.microwave.payments.payment.enums.PaymentStatus;
+import com.microwave.payments.error.ValidationProblemDetail;
 import com.microwave.payments.payment.exceptions.PaymentNotFoundException;
 import com.microwave.payments.payment.util.PaymentSimulator;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +37,7 @@ public class PaymentController {
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Payment processed (approved or rejected)"),
       @ApiResponse(responseCode = "400", description = "Validation failure",
-          content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+          content = @Content(schema = @Schema(implementation = ValidationProblemDetail.class)))
   })
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
