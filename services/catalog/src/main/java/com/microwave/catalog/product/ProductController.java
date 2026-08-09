@@ -3,7 +3,6 @@ package com.microwave.catalog.product;
 import com.microwave.catalog.product.dto.ProductRequest;
 import com.microwave.catalog.product.dto.ProductResponse;
 import com.microwave.catalog.error.ValidationProblemDetail;
-import com.microwave.catalog.product.exceptions.ProductNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,17 +25,17 @@ import java.util.List;
 @RequestMapping("/products")
 public class ProductController {
 
-  private final ProductRepository productRepository;
+  private final ProductService productService;
 
-  public ProductController(ProductRepository productRepository) {
-    this.productRepository = productRepository;
+  public ProductController(ProductService productService) {
+    this.productService = productService;
   }
 
   @Operation(summary = "List all products")
   @ApiResponse(responseCode = "200", description = "Products listed successfully")
   @GetMapping
   public List<ProductResponse> listProducts() {
-    return productRepository.findAll().stream()
+    return productService.findAll().stream()
         .map(ProductResponse::from)
         .toList();
   }
@@ -49,9 +48,7 @@ public class ProductController {
   })
   @GetMapping("/{id}")
   public ProductResponse getProduct(@PathVariable Long id) {
-    Product product = productRepository.findById(id)
-        .orElseThrow(() -> new ProductNotFoundException(id));
-    return ProductResponse.from(product);
+    return ProductResponse.from(productService.findById(id));
   }
 
   @Operation(summary = "Create a new product")
@@ -63,8 +60,7 @@ public class ProductController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public ProductResponse createProduct(@Valid @RequestBody ProductRequest request) {
-    Product product = new Product(request.name(), request.description(), request.price());
-    Product saved = productRepository.save(product);
+    Product saved = productService.createProduct(request.name(), request.description(), request.price());
     return ProductResponse.from(saved);
   }
 }

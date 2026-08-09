@@ -1,5 +1,6 @@
 package com.microwave.catalog.product;
 
+import com.microwave.catalog.product.exceptions.ProductNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -8,9 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -24,12 +23,13 @@ class ProductControllerTest {
   private MockMvc mockMvc;
 
   @MockitoBean
-  private ProductRepository productRepository;
+  private ProductService productService;
 
   @Test
   void createsProduct() throws Exception {
     Product saved = new Product("Keyboard", "Mechanical keyboard", new BigDecimal("350.00"));
-    when(productRepository.save(any(Product.class))).thenReturn(saved);
+    when(productService.createProduct("Keyboard", "Mechanical keyboard", new BigDecimal("350.00")))
+        .thenReturn(saved);
 
     mockMvc.perform(post("/products")
             .contentType("application/json")
@@ -59,7 +59,7 @@ class ProductControllerTest {
   @Test
   void getsProductById() throws Exception {
     Product product = new Product("Keyboard", "Mechanical keyboard", new BigDecimal("350.00"));
-    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+    when(productService.findById(1L)).thenReturn(product);
 
     mockMvc.perform(get("/products/1"))
         .andExpect(status().isOk())
@@ -68,7 +68,7 @@ class ProductControllerTest {
 
   @Test
   void returnsNotFoundForMissingProduct() throws Exception {
-    when(productRepository.findById(99L)).thenReturn(Optional.empty());
+    when(productService.findById(99L)).thenThrow(new ProductNotFoundException(99L));
 
     mockMvc.perform(get("/products/99"))
         .andExpect(status().isNotFound())
@@ -81,7 +81,7 @@ class ProductControllerTest {
   @Test
   void listsProducts() throws Exception {
     Product product = new Product("Keyboard", "Mechanical keyboard", new BigDecimal("350.00"));
-    when(productRepository.findAll()).thenReturn(List.of(product));
+    when(productService.findAll()).thenReturn(List.of(product));
 
     mockMvc.perform(get("/products"))
         .andExpect(status().isOk())
