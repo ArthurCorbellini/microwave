@@ -2,7 +2,7 @@
 
 A learning project: an e-commerce system built incrementally to practice microservices in Java, messaging with RabbitMQ/Kafka, containerization with Docker, and orchestration with Kubernetes.
 
-See [docs/roadmap.md](docs/roadmap.md) for the full roadmap, [docs/tech-debt.md](docs/tech-debt.md) for known limitations, and [docs/development-setup.md](docs/development-setup.md) for how to get a working dev environment.
+See [docs/roadmap.md](docs/roadmap.md) for the full roadmap, [docs/decision-log/tech-debts.md](docs/decision-log/tech-debts.md) for known limitations, and [docs/development-setup.md](docs/development-setup.md) for how to get a working dev environment.
 
 ## Phase 1 — Microservices foundation
 

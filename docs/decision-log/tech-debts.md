@@ -1,8 +1,29 @@
-# Tech Debt
+# Tech Debts
 
 Living list of known limitations — shortcuts whose cost of fixing grows the longer they're left unaddressed — tracked across phases so future sessions (human or Claude) don't rediscover them from scratch. Each entry states what the gap is, why it exists, and when/how it's expected to be addressed.
 
-Deliberate choices *not* to build or adopt something (no compounding cost either way) are tracked separately in [`docs/scope-decisions.md`](scope-decisions.md).
+This is different from the decision log's other categories:
+
+- `docs/decision-log/rejected-approaches.md` and `docs/decision-log/failed-approaches.md` both track things that are **not** part of the current design at all — declined by reasoning alone, or actually tried and reverted, respectively. This file tracks limitations *in* the current, accepted design: something that exists and works, just imperfectly.
+
+## Entry template
+
+New entries go under `## Open` and should follow this structure:
+
+```markdown
+### TD-N — <short title>
+
+**Introduced in:** <phase/context>
+**Where:** <affected service/component>
+
+<1-2 sentences: what the gap is>
+
+**Why it exists:** <the reasoning/trade-off that produced this>
+
+**Planned resolution:** <what will fix it, and when/under what condition>
+```
+
+When a limitation is actually fixed, move its entry under `## Resolved` and add a `**Resolved in:**` field noting when/how it was addressed.
 
 ## Open
 

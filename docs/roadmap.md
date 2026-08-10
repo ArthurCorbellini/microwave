@@ -84,9 +84,9 @@ Provider choice and cost are a decision for when this phase is actually planned,
 
 **Done when:** `terraform apply` provisions a working managed Kubernetes cluster from scratch, the Phase 4 manifests deploy successfully onto it, and `terraform destroy` tears it down cleanly with no orphaned resources.
 
-## Tech debt and scope decisions
+## Decision log
 
-Known limitations are tracked in [`docs/tech-debt.md`](tech-debt.md); deliberate choices not to build or adopt something are tracked in [`docs/scope-decisions.md`](scope-decisions.md) — not here. Check both before starting each new phase.
+Known limitations are tracked in [`docs/decision-log/tech-debts.md`](decision-log/tech-debts.md); deliberate choices not to build or adopt something are tracked in [`docs/decision-log/rejected-approaches.md`](decision-log/rejected-approaches.md) — not here. Check both before starting each new phase.
 
 ## Deferred decisions
 
@@ -94,7 +94,7 @@ Decisions tied to *when* something joins the roadmap, not *whether* — these ar
 
 - **API Gateway:** not included in Phase 1. With no external client yet (everything is called directly via tests/Postman), a gateway wouldn't add learning value this early. Introduced around Phase 4, where it connects naturally with Kubernetes Ingress.
 
-Decisions to *not* build or adopt something at all (no planned phase) are tracked in [`docs/scope-decisions.md`](scope-decisions.md) instead.
+Decisions to *not* build or adopt something at all (no planned phase) are tracked in [`docs/decision-log/rejected-approaches.md`](decision-log/rejected-approaches.md) instead.
 
 ## Next step
 
