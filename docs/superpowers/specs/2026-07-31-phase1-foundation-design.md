@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-31
 **Status:** approved, ready for implementation planning
-**Related:** [Roadmap overview](../../roadmap.md) · [Tech debt](../../tech-debt.md)
+**Related:** [Roadmap overview](../../roadmap.md) · [Tech debts](../../decision-log/tech-debts.md)
 
 ## Goal
 
@@ -73,7 +73,7 @@ microwave/
 | 6b | `payments` responds `REJECTED` | Update `status = REJECTED`, return `201` with the order — this is a valid business outcome, not an HTTP error |
 | 6c | `payments` unreachable / timeout | Order stays persisted with `status = CREATED` (not rolled back); API returns `503` |
 
-Case 6c is a known, deliberate limitation of this phase (no saga/compensation over synchronous calls) — tracked as [TD-1 in tech-debt.md](../../tech-debt.md#td-1--orders-can-get-stuck-in-created-if-payments-is-unreachable) and expected to be addressed by Phase 3's messaging design.
+Case 6c is a known, deliberate limitation of this phase (no saga/compensation over synchronous calls) — tracked as [TD-1 in tech-debts.md](../../decision-log/tech-debts.md#td-1--orders-can-get-stuck-in-created-if-payments-is-unreachable) and expected to be addressed by Phase 3's messaging design.
 
 ## Error handling
 
