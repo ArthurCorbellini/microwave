@@ -57,7 +57,7 @@ Per the Phase 1 design (see [`docs/superpowers/specs/2026-07-31-phase1-foundatio
 
 ## Containerization
 
-Each service has a multi-stage `Dockerfile` (`services/<service>/Dockerfile`): a `maven:3.9.16-eclipse-temurin-25` build stage running `mvn package -DskipTests`, and an `eclipse-temurin:25-jre` runtime stage that only copies the built `.jar`. Tests never run inside the image build — that's already covered by CI (Phase 1.1) on every PR.
+Each service has a multi-stage `Dockerfile` (`services/<service>/Dockerfile`): a `maven:3.9.16-eclipse-temurin-25` build stage running `mvn package -Dmaven.test.skip=true`, and an `eclipse-temurin:25-jre` runtime stage that installs `curl` (required by the `docker-compose` healthchecks below) before copying the built `.jar`. Tests never run inside the image build — that's already covered by CI (Phase 1.1) on every PR. Each service also has a `.dockerignore` (excludes `target/`) to keep the build context small.
 
 Configuration for containers is env-var only — no `application.yml` placeholders. `docker-compose.yml` sets `SPRING_DATASOURCE_URL`/`_USERNAME`/`_PASSWORD` and any custom service-to-service URL property (e.g. `CATALOG_SERVICE_URL` → `catalog.service.url`) via Spring Boot's relaxed env-var binding. `application.yml` keeps its `localhost` defaults, so native (`mise`/IDE) runs are unaffected.
 

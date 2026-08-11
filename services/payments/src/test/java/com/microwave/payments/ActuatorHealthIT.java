@@ -32,4 +32,10 @@ class ActuatorHealthIT {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value("UP"));
   }
+
+  @Test
+  void onlyHealthEndpointIsExposed() throws Exception {
+    mockMvc.perform(get("/actuator/env"))
+        .andExpect(status().isNotFound());
+  }
 }

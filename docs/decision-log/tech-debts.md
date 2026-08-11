@@ -71,6 +71,17 @@ Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at 
 
 **Planned resolution:** `docs/roadmap.md`'s Phase 4 scope already includes Kubernetes `ConfigMaps/Secrets` — that's when real secret management is introduced, replacing both this and Phase 1's `application.yml` credentials.
 
+### TD-5 — No automated validation of Dockerfiles or `docker-compose.yml`
+
+**Introduced in:** Phase 2
+**Where:** `services/*/Dockerfile`, `docker-compose.yml`
+
+CI (`.github/workflows/ci.yml`) only runs `mvn -B verify` per service; it never builds the Docker images or validates `docker-compose.yml`. The 3 Dockerfiles are deliberately duplicated per service (see the Containerization section of `docs/conventions.md`), so a fix applied to one and not synced to the others would merge green and only surface when someone runs `docker-compose up` manually.
+
+**Why it exists:** the Phase 2 design spec explicitly deferred "CI building/pushing Docker images" as out of scope, since Phase 1.1's CI gate was scoped to the Maven test suite only.
+
+**Planned resolution:** Add a CI step that runs `docker-compose build` (or an equivalent per-service `docker build`, no push/registry involved) to catch build breakage and Dockerfile drift across services. Revisit when Phase 3 adds `inventory`/`notifications`, since the duplication cost doubles then.
+
 ## Resolved
 
 _(none yet)_
