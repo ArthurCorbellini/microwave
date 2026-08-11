@@ -37,7 +37,7 @@ Focus: service boundaries, API contracts, "database per service," tests.
 
 ### Phase 1.1 — Continuous Integration (test gate)
 
-**Status:** Design approved — see [`docs/superpowers/specs/2026-08-11-ci-pipeline-design.md`](superpowers/specs/2026-08-11-ci-pipeline-design.md).
+**Status:** Complete (2026-08-11). See [`docs/superpowers/specs/2026-08-11-ci-pipeline-design.md`](superpowers/specs/2026-08-11-ci-pipeline-design.md) and [`docs/superpowers/plans/2026-08-11-ci-pipeline.md`](superpowers/plans/2026-08-11-ci-pipeline.md) for the design and plan it was built from.
 
 GitHub Actions workflow running each service's test suite (unit + Testcontainers integration tests) on every PR, gating merges to `main` via a required branch protection rule. Doesn't depend on Phase 2 — GitHub-hosted runners already have Docker available for Testcontainers.
 
@@ -108,4 +108,4 @@ Decisions to *not* build or adopt something at all (no planned phase) are tracke
 
 ## Next step
 
-Phase 1 is complete — see [`docs/superpowers/specs/2026-07-31-phase1-foundation-design.md`](superpowers/specs/2026-07-31-phase1-foundation-design.md) and [`docs/superpowers/plans/2026-07-31-phase1-foundation.md`](superpowers/plans/2026-07-31-phase1-foundation.md) for the design and plan it was built from. Phase 1.1 (CI test gate) is next — design approved, implementation plan pending. Phase 2 (containerization) follows, and starts with its own brainstorm → spec → plan cycle.
+Phase 1 is complete — see [`docs/superpowers/specs/2026-07-31-phase1-foundation-design.md`](superpowers/specs/2026-07-31-phase1-foundation-design.md) and [`docs/superpowers/plans/2026-07-31-phase1-foundation.md`](superpowers/plans/2026-07-31-phase1-foundation.md) for the design and plan it was built from. Phase 1.1 (CI test gate) is also complete — see [`docs/superpowers/specs/2026-08-11-ci-pipeline-design.md`](superpowers/specs/2026-08-11-ci-pipeline-design.md) and [`docs/superpowers/plans/2026-08-11-ci-pipeline.md`](superpowers/plans/2026-08-11-ci-pipeline.md). Phase 2 (containerization) is next, and starts with its own brainstorm → spec → plan cycle.
