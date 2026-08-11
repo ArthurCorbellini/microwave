@@ -47,6 +47,8 @@ Focus: closing the gap where PRs could merge without any automated verification 
 
 ### Phase 2 — Containerization
 
+**Status:** Complete (2026-08-11). See [`docs/superpowers/specs/2026-08-11-phase2-containerization-design.md`](superpowers/specs/2026-08-11-phase2-containerization-design.md) and [`docs/superpowers/plans/2026-08-11-phase2-containerization.md`](superpowers/plans/2026-08-11-phase2-containerization.md) for the design and plan it was built from.
+
 Dockerfile per service + docker-compose orchestrating all services and databases.
 
 Focus: packaging, networking between containers, configuration via environment variables.
@@ -108,4 +110,4 @@ Decisions to *not* build or adopt something at all (no planned phase) are tracke
 
 ## Next step
 
-Phase 1 is complete — see [`docs/superpowers/specs/2026-07-31-phase1-foundation-design.md`](superpowers/specs/2026-07-31-phase1-foundation-design.md) and [`docs/superpowers/plans/2026-07-31-phase1-foundation.md`](superpowers/plans/2026-07-31-phase1-foundation.md) for the design and plan it was built from. Phase 1.1 (CI test gate) is also complete — see [`docs/superpowers/specs/2026-08-11-ci-pipeline-design.md`](superpowers/specs/2026-08-11-ci-pipeline-design.md) and [`docs/superpowers/plans/2026-08-11-ci-pipeline.md`](superpowers/plans/2026-08-11-ci-pipeline.md). Phase 2 (containerization) is next, and starts with its own brainstorm → spec → plan cycle.
+Phase 1 is complete — see [`docs/superpowers/specs/2026-07-31-phase1-foundation-design.md`](superpowers/specs/2026-07-31-phase1-foundation-design.md) and [`docs/superpowers/plans/2026-07-31-phase1-foundation.md`](superpowers/plans/2026-07-31-phase1-foundation.md) for the design and plan it was built from. Phase 1.1 (CI test gate) is also complete — see [`docs/superpowers/specs/2026-08-11-ci-pipeline-design.md`](superpowers/specs/2026-08-11-ci-pipeline-design.md) and [`docs/superpowers/plans/2026-08-11-ci-pipeline.md`](superpowers/plans/2026-08-11-ci-pipeline.md). Phase 2 (containerization) is also complete — see [`docs/superpowers/specs/2026-08-11-phase2-containerization-design.md`](superpowers/specs/2026-08-11-phase2-containerization-design.md) and [`docs/superpowers/plans/2026-08-11-phase2-containerization.md`](superpowers/plans/2026-08-11-phase2-containerization.md). Phase 3 (asynchronous messaging) is next, and starts with its own brainstorm → spec → plan cycle.
