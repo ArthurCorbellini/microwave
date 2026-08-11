@@ -35,6 +35,16 @@ Focus: service boundaries, API contracts, "database per service," tests.
 
 **Done when:** all 3 services run locally, each with its own database, and it's possible to create an order end-to-end (catalog → order → simulated payment) via REST calls, with automated tests covering the main flow.
 
+### Phase 1.1 — Continuous Integration (test gate)
+
+**Status:** Design approved — see [`docs/superpowers/specs/2026-08-11-ci-pipeline-design.md`](superpowers/specs/2026-08-11-ci-pipeline-design.md).
+
+GitHub Actions workflow running each service's test suite (unit + Testcontainers integration tests) on every PR, gating merges to `main` via a required branch protection rule. Doesn't depend on Phase 2 — GitHub-hosted runners already have Docker available for Testcontainers.
+
+Focus: closing the gap where PRs could merge without any automated verification (Phase 1's own PR merged with none).
+
+**Done when:** a PR with a failing test in any of the 3 services cannot be merged into `main`, and a PR with all tests passing can.
+
 ### Phase 2 — Containerization
 
 Dockerfile per service + docker-compose orchestrating all services and databases.
@@ -98,4 +108,4 @@ Decisions to *not* build or adopt something at all (no planned phase) are tracke
 
 ## Next step
 
-Phase 1 is complete — see [`docs/superpowers/specs/2026-07-31-phase1-foundation-design.md`](superpowers/specs/2026-07-31-phase1-foundation-design.md) and [`docs/superpowers/plans/2026-07-31-phase1-foundation.md`](superpowers/plans/2026-07-31-phase1-foundation.md) for the design and plan it was built from. Phase 2 (containerization) is next, and starts with its own brainstorm → spec → plan cycle.
+Phase 1 is complete — see [`docs/superpowers/specs/2026-07-31-phase1-foundation-design.md`](superpowers/specs/2026-07-31-phase1-foundation-design.md) and [`docs/superpowers/plans/2026-07-31-phase1-foundation.md`](superpowers/plans/2026-07-31-phase1-foundation.md) for the design and plan it was built from. Phase 1.1 (CI test gate) is next — design approved, implementation plan pending. Phase 2 (containerization) follows, and starts with its own brainstorm → spec → plan cycle.
