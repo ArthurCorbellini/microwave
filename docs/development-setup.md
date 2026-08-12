@@ -37,3 +37,16 @@ Java 25 and Maven, pinned per-project via [mise](https://mise.jdx.dev), plus a c
    ```bash
    mvn -f services/catalog/pom.xml test
    ```
+
+## Running via Docker Compose
+
+Instead of running each service natively (step 5 above), the full stack — all 3 services plus their databases — can run entirely in containers:
+
+```bash
+docker-compose up --build   # first run, or after code changes
+docker-compose up           # subsequent runs, no rebuild
+docker-compose down         # stop, keep data
+docker-compose down -v      # stop and wipe all data (named volumes)
+```
+
+Services are reachable at the same ports as native mode: `catalog` on `8081`, `payments` on `8082`, `orders` on `8083`. `docker-compose` picks up `DOCKER_HOST` from `mise.local.toml` automatically (same socket Testcontainers already uses), so no extra configuration is needed beyond what step 3 above already sets up.

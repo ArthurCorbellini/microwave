@@ -49,6 +49,39 @@ Branch protection on `main` requires 3 check contexts (`test (catalog)`, `test (
 
 **Planned resolution:** When a phase adds a new service to the CI matrix (e.g. Phase 3 adding `inventory` and `notifications`), the branch protection rule's required checks must be updated in the same change: `gh api --method PUT repos/<owner>/<repo>/branches/main/protection` with the new service's `test (<service>)` context added to the required list. Call this out explicitly in that phase's plan so it isn't missed.
 
+### TD-3 — App ports published directly to the host, no gateway in front
+
+**Introduced in:** Phase 2
+**Where:** `docker-compose.yml` — `catalog`, `orders`, `payments` port mappings
+
+All three services' ports (8081/8082/8083) are published directly to the host so the existing Postman/curl-based testing flow keeps working. There's no API Gateway or reverse proxy in front of them.
+
+**Why it exists:** `docs/roadmap.md`'s "Deferred decisions" section already defers the API Gateway to Phase 4, where it pairs naturally with Kubernetes Ingress. Phase 2 continues that same deferral — it doesn't introduce a new gap, just makes the existing one visible at the container-networking level.
+
+**Planned resolution:** When the API Gateway lands in Phase 4, direct host port publishing is replaced by routing through the gateway/ingress.
+
+### TD-4 — DB credentials hardcoded in `docker-compose.yml`
+
+**Introduced in:** Phase 2
+**Where:** `docker-compose.yml` — `catalog-db`, `orders-db`, `payments-db`, and the corresponding `SPRING_DATASOURCE_*` env vars on each service
+
+Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at the same security level as the plaintext credentials already present in each service's `application.yml` since Phase 1.
+
+**Why it exists:** these aren't real secrets (local learning-project Postgres credentials), so introducing `.env`-based indirection now would add complexity without reducing any actual risk. See the Phase 2 design spec's rejected-approaches discussion for the full reasoning.
+
+**Planned resolution:** `docs/roadmap.md`'s Phase 4 scope already includes Kubernetes `ConfigMaps/Secrets` — that's when real secret management is introduced, replacing both this and Phase 1's `application.yml` credentials.
+
 ## Resolved
 
-_(none yet)_
+### TD-5 — No automated validation of Dockerfiles or `docker-compose.yml`
+
+**Introduced in:** Phase 2
+**Where:** `services/*/Dockerfile`, `docker-compose.yml`
+
+CI (`.github/workflows/ci.yml`) only ran `mvn -B verify` per service; it never built the Docker images or validated `docker-compose.yml`. The 3 Dockerfiles are deliberately duplicated per service (see the Containerization section of `docs/conventions.md`), so a fix applied to one and not synced to the others would merge green and only surface when someone runs `docker-compose up` manually.
+
+**Why it existed:** the Phase 2 design spec explicitly deferred "CI building/pushing Docker images" as out of scope, since Phase 1.1's CI gate was scoped to the Maven test suite only.
+
+**Resolved in:** Phase 2 (same PR), by adding a `docker-build` matrix job to `.github/workflows/ci.yml` (mirroring the existing `test` matrix) that runs `docker build services/<service>` for each of the 3 services, with `docker-build (catalog)`, `docker-build (orders)`, `docker-build (payments)` added as required status checks on `main`'s branch protection alongside the existing `test (*)` checks. This closes the specific gap this entry described — a fix to one Dockerfile not synced to the others can no longer merge green.
+
+Note: this validates that each service's **Dockerfile builds successfully**, not that `docker-compose.yml`'s own orchestration (healthchecks, `depends_on` ordering, env-var wiring) is correct — that's still verified manually only (see Task 5 of the Phase 2 plan). Revisit if that gap needs closing too, e.g. once Phase 3 adds `inventory`/`notifications` and manual verification gets more expensive to repeat by hand.

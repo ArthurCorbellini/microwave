@@ -55,6 +55,14 @@ Per the Phase 1 design (see [`docs/superpowers/specs/2026-07-31-phase1-foundatio
 - **Testcontainers** for integration tests against a real Postgres instance (wired via `@ServiceConnection`, not manual `@DynamicPropertySource` — see `49c0124`).
 - **WireMock** for Feign client contract tests, where a service calls another service synchronously (e.g. `orders` → `catalog`, `orders` → `payments`).
 
+## Containerization
+
+Each service has a multi-stage `Dockerfile` (`services/<service>/Dockerfile`): a `maven:3.9.16-eclipse-temurin-25` build stage running `mvn package -Dmaven.test.skip=true`, and an `eclipse-temurin:25-jre` runtime stage that installs `curl` (required by the `docker-compose` healthchecks below) before copying the built `.jar`. Tests never run inside the image build — that's already covered by CI (Phase 1.1) on every PR. Each service also has a `.dockerignore` (excludes `target/`) to keep the build context small.
+
+Configuration for containers is env-var only — no `application.yml` placeholders. `docker-compose.yml` sets `SPRING_DATASOURCE_URL`/`_USERNAME`/`_PASSWORD` and any custom service-to-service URL property (e.g. `CATALOG_SERVICE_URL` → `catalog.service.url`) via Spring Boot's relaxed env-var binding. `application.yml` keeps its `localhost` defaults, so native (`mise`/IDE) runs are unaffected.
+
+Every service exposes `GET /actuator/health` via `spring-boot-starter-actuator`, with `management.endpoints.web.exposure.include=health` — no other actuator endpoint is exposed, since app ports are published to the host. New services should add this from the start; it's used for `docker-compose` healthchecks and `depends_on: condition: service_healthy` ordering, and doubles as the base for Phase 4's Kubernetes liveness/readiness probes.
+
 ## Out of scope for this file
 
 - Anything specific to a single phase — that belongs in the relevant `docs/superpowers/specs/` or `docs/superpowers/plans/` entry, not here.

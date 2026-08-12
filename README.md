@@ -29,7 +29,7 @@ mvn -f services/orders/pom.xml verify
 
 ### Running a service locally
 
-Each service expects a local PostgreSQL database matching its `application.yml` datasource config (see each service's `src/main/resources/application.yml`). Docker Compose support for running all services and databases together is planned for Phase 2.
+Each service expects a local PostgreSQL database matching its `application.yml` datasource config (see each service's `src/main/resources/application.yml`) — or use Docker Compose (see the Phase 2 section below) to avoid setting one up by hand.
 
 ```bash
 mvn -f services/catalog/pom.xml spring-boot:run
@@ -43,7 +43,7 @@ Each service exposes interactive API docs (Swagger UI, generated from its endpoi
 
 ### Trying the end-to-end flow
 
-This is a **one-off manual verification setup**, not the regular dev workflow — tests get their own throwaway databases from Testcontainers (see [docs/development-setup.md](docs/development-setup.md)), so nothing here is needed to run `mvn verify`. Use it only when you want to exercise the real `catalog → orders → payments` chain over HTTP by hand.
+This is a **one-off manual verification setup for running natively without Docker** — if you have Docker/Podman available, `docker-compose up --build` (see the Phase 2 section below) does all of this in one command instead. Tests get their own throwaway databases from Testcontainers (see [docs/development-setup.md](docs/development-setup.md)) regardless, so nothing here is needed to run `mvn verify`. Use this manual path only when you want to exercise the real `catalog → orders → payments` chain over HTTP by hand without Docker.
 
 All three services point at the same `localhost:5432`, so one PostgreSQL server hosting three databases is enough. Substitute `docker` for `podman-remote` if that's your container engine. Note each `CREATE DATABASE` needs its own `-c` — `psql` wraps a multi-statement `-c` in a transaction, and `CREATE DATABASE` cannot run inside one.
 
@@ -99,3 +99,16 @@ Tear it all down afterwards — stop the three `spring-boot:run` processes, then
 podman-remote stop microwave-e2e-postgres
 podman-remote rm microwave-e2e-postgres
 ```
+
+## Phase 2 — Containerization
+
+All 3 services plus their databases run as a single stack via Docker Compose — no manual database setup needed:
+
+```bash
+docker-compose up --build   # first run, or after code changes
+docker-compose up           # subsequent runs, no rebuild
+docker-compose down         # stop, keep data
+docker-compose down -v      # stop and wipe all data (named volumes)
+```
+
+Services are reachable at the same ports as native mode: `catalog` on `8081`, `payments` on `8082`, `orders` on `8083`. See [docs/development-setup.md](docs/development-setup.md) for details.
