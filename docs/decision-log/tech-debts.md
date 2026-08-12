@@ -71,17 +71,17 @@ Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at 
 
 **Planned resolution:** `docs/roadmap.md`'s Phase 4 scope already includes Kubernetes `ConfigMaps/Secrets` — that's when real secret management is introduced, replacing both this and Phase 1's `application.yml` credentials.
 
+## Resolved
+
 ### TD-5 — No automated validation of Dockerfiles or `docker-compose.yml`
 
 **Introduced in:** Phase 2
 **Where:** `services/*/Dockerfile`, `docker-compose.yml`
 
-CI (`.github/workflows/ci.yml`) only runs `mvn -B verify` per service; it never builds the Docker images or validates `docker-compose.yml`. The 3 Dockerfiles are deliberately duplicated per service (see the Containerization section of `docs/conventions.md`), so a fix applied to one and not synced to the others would merge green and only surface when someone runs `docker-compose up` manually.
+CI (`.github/workflows/ci.yml`) only ran `mvn -B verify` per service; it never built the Docker images or validated `docker-compose.yml`. The 3 Dockerfiles are deliberately duplicated per service (see the Containerization section of `docs/conventions.md`), so a fix applied to one and not synced to the others would merge green and only surface when someone runs `docker-compose up` manually.
 
-**Why it exists:** the Phase 2 design spec explicitly deferred "CI building/pushing Docker images" as out of scope, since Phase 1.1's CI gate was scoped to the Maven test suite only.
+**Why it existed:** the Phase 2 design spec explicitly deferred "CI building/pushing Docker images" as out of scope, since Phase 1.1's CI gate was scoped to the Maven test suite only.
 
-**Planned resolution:** Add a CI step that runs `docker-compose build` (or an equivalent per-service `docker build`, no push/registry involved) to catch build breakage and Dockerfile drift across services. Revisit when Phase 3 adds `inventory`/`notifications`, since the duplication cost doubles then.
+**Resolved in:** Phase 2 (same PR), by adding a `docker-build` matrix job to `.github/workflows/ci.yml` (mirroring the existing `test` matrix) that runs `docker build services/<service>` for each of the 3 services, with `docker-build (catalog)`, `docker-build (orders)`, `docker-build (payments)` added as required status checks on `main`'s branch protection alongside the existing `test (*)` checks. This closes the specific gap this entry described — a fix to one Dockerfile not synced to the others can no longer merge green.
 
-## Resolved
-
-_(none yet)_
+Note: this validates that each service's **Dockerfile builds successfully**, not that `docker-compose.yml`'s own orchestration (healthchecks, `depends_on` ordering, env-var wiring) is correct — that's still verified manually only (see Task 5 of the Phase 2 plan). Revisit if that gap needs closing too, e.g. once Phase 3 adds `inventory`/`notifications` and manual verification gets more expensive to repeat by hand.
