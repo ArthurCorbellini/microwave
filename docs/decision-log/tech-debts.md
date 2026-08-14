@@ -36,7 +36,7 @@ If the call to `payments` fails for a technical reason (service down, timeout �
 
 **Why it exists:** Phase 1 is scoped to synchronous REST only, deliberately, to focus on service boundaries and API contracts before introducing messaging.
 
-**Planned resolution:** Phase 3 (asynchronous messaging) replaces this synchronous chain with RabbitMQ commands / Kafka events, which naturally supports retry and eventual consistency. Revisit this specific flow when designing Phase 3's order-creation sequence.
+**Planned resolution:** Phase 4 (payments moves to asynchronous messaging) replaces this synchronous chain with a RabbitMQ command/reply, which naturally supports retry and eventual consistency. Revisit this specific flow when designing Phase 4's payment-command sequence. (Phase 3 introduces the same RabbitMQ pattern first, but for Inventory — Payments stays synchronous through Phase 3, so this entry stays open until Phase 4.)
 
 ### TD-2 — Branch protection's required checks are hardcoded, not derived from the CI matrix
 
@@ -56,9 +56,9 @@ Branch protection on `main` requires 3 check contexts (`test (catalog)`, `test (
 
 All three services' ports (8081/8082/8083) are published directly to the host so the existing Postman/curl-based testing flow keeps working. There's no API Gateway or reverse proxy in front of them.
 
-**Why it exists:** `docs/roadmap.md`'s "Deferred decisions" section already defers the API Gateway to Phase 4, where it pairs naturally with Kubernetes Ingress. Phase 2 continues that same deferral — it doesn't introduce a new gap, just makes the existing one visible at the container-networking level.
+**Why it exists:** `docs/roadmap.md`'s "Deferred decisions" section already defers the API Gateway to Phase 6, where it pairs naturally with Kubernetes Ingress (Phase 5). Phase 2 continues that same deferral — it doesn't introduce a new gap, just makes the existing one visible at the container-networking level.
 
-**Planned resolution:** When the API Gateway lands in Phase 4, direct host port publishing is replaced by routing through the gateway/ingress.
+**Planned resolution:** two stages. Phase 6's API Gateway removes direct host port publishing, but still proxies directly to each service — a partial mitigation, not full closure, since services stay reachable, just through one more hop. Phase 8's BFF closes it fully: the Gateway is restructured to route only to the BFF, and the BFF becomes the only thing allowed to call the domain services directly. This entry only moves to `## Resolved` after Phase 8, not Phase 6.
 
 ### TD-4 — DB credentials hardcoded in `docker-compose.yml`
 
@@ -69,7 +69,7 @@ Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at 
 
 **Why it exists:** these aren't real secrets (local learning-project Postgres credentials), so introducing `.env`-based indirection now would add complexity without reducing any actual risk. See the Phase 2 design spec's rejected-approaches discussion for the full reasoning.
 
-**Planned resolution:** `docs/roadmap.md`'s Phase 4 scope already includes Kubernetes `ConfigMaps/Secrets` — that's when real secret management is introduced, replacing both this and Phase 1's `application.yml` credentials.
+**Planned resolution:** `docs/roadmap.md`'s Phase 5 scope already includes Kubernetes `ConfigMaps/Secrets` — that's when real secret management is introduced, replacing both this and Phase 1's `application.yml` credentials.
 
 ## Resolved
 

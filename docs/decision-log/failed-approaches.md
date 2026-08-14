@@ -75,6 +75,6 @@ Using the standard Dev Container Features mechanism (`ghcr.io/devcontainers/feat
 
 **What replaced it:** plain Dockerfile `RUN` steps (`apt-get install maven`; downloading the static `docker` CLI binary) — same end result, no Features mechanism involved.
 
-**Lesson:** Dev Container Features and `podman-remote` are incompatible, full stop, independent of anything else in this project. If containers come up again for something else (Phase 2's docker-compose, Phase 4's Kubernetes tooling), don't reach for Features if Podman-remote is in the picture.
+**Lesson:** Dev Container Features and `podman-remote` are incompatible, full stop, independent of anything else in this project. If containers come up again for something else (Phase 2's docker-compose, Phase 5's Kubernetes tooling), don't reach for Features if Podman-remote is in the picture.
 
 **Reconsider if:** this specific limitation is fixed upstream (Podman/Buildah's handling of Buildx additional build contexts under a remote client), or the project switches from `podman-remote` to Docker or local Podman as its container engine.

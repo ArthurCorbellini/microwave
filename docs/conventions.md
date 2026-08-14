@@ -61,7 +61,7 @@ Each service has a multi-stage `Dockerfile` (`services/<service>/Dockerfile`): a
 
 Configuration for containers is env-var only — no `application.yml` placeholders. `docker-compose.yml` sets `SPRING_DATASOURCE_URL`/`_USERNAME`/`_PASSWORD` and any custom service-to-service URL property (e.g. `CATALOG_SERVICE_URL` → `catalog.service.url`) via Spring Boot's relaxed env-var binding. `application.yml` keeps its `localhost` defaults, so native (`mise`/IDE) runs are unaffected.
 
-Every service exposes `GET /actuator/health` via `spring-boot-starter-actuator`, with `management.endpoints.web.exposure.include=health` — no other actuator endpoint is exposed, since app ports are published to the host. New services should add this from the start; it's used for `docker-compose` healthchecks and `depends_on: condition: service_healthy` ordering, and doubles as the base for Phase 4's Kubernetes liveness/readiness probes.
+Every service exposes `GET /actuator/health` via `spring-boot-starter-actuator`, with `management.endpoints.web.exposure.include=health` — no other actuator endpoint is exposed, since app ports are published to the host. New services should add this from the start; it's used for `docker-compose` healthchecks and `depends_on: condition: service_healthy` ordering, and doubles as the base for Phase 5's Kubernetes liveness/readiness probes.
 
 ## Out of scope for this file
 

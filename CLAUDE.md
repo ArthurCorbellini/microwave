@@ -5,6 +5,7 @@ Learning project: an e-commerce system built incrementally to practice microserv
 ## Where to look before doing anything
 
 - **`docs/roadmap.md`** — the living roadmap: all phases, what each is for, "done when" criteria, and deferred decisions tied to *when* something joins the roadmap (e.g. API Gateway, cloud provider choice). Start here to understand what phase the project is in and why.
+- **`docs/architecture.md`** — the living system topology: how services, brokers, and (once they exist) the Gateway/BFF connect, with a current-state and a target-state diagram. Check this for the macro "how the pieces fit together" view, as opposed to `docs/conventions.md`'s per-service "how it's built inside" view.
 - **`docs/decision-log/`** — living record of why the design looks the way it does, one file per category:
   - **`tech-debts.md`** — known limitations: shortcuts whose cost of fixing grows the longer they're left unaddressed (e.g. TD-1: orders can get stuck in `CREATED` if `payments` is unreachable). Check this before "fixing" something that looks like a bug — it may be intentional and already tracked.
   - **`rejected-approaches.md`** — things considered and declined *without writing code*, with no compounding cost either way (e.g. RA-1: no shopping cart; RA-2: MapStruct not adopted for entity↔DTO mapping). Check this before re-proposing a feature or dependency — it may have already been evaluated and declined.
