@@ -40,7 +40,7 @@ public class OrderController {
           content = @Content(schema = @Schema(implementation = ValidationProblemDetail.class))),
       @ApiResponse(responseCode = "404", description = "Product not found in catalog",
           content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-      @ApiResponse(responseCode = "503", description = "catalog or payments is unreachable",
+      @ApiResponse(responseCode = "503", description = "catalog is unreachable",
           content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
   })
   @PostMapping

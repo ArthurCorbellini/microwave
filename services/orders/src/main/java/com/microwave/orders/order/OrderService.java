@@ -19,6 +19,14 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 
+// Intentionally NOT @Transactional in createOrder or handleInventoryReserved:
+// each method persists/updates the order first, then performs a side effect
+// (publishing OrderCreated, sending ReserveStock, calling payments) that can
+// fail independently. Wrapping either in a transaction would roll back what
+// was already recorded whenever that follow-up call fails — see
+// docs/decision-log/tech-debts.md TD-1, which documents this gap for the
+// payments-unreachable case (now living in handleInventoryReserved instead
+// of the original synchronous POST /orders flow).
 @Service
 public class OrderService {
 
@@ -54,9 +62,13 @@ public class OrderService {
     return order;
   }
 
-  // Called by InventoryReservedListener. The CREATED check, combined with
-  // Order's @Version, makes a redelivered reply a no-op instead of re-charging
-  // payments or overwriting an order that already settled.
+  // Called by InventoryReservedListener. The CREATED check makes a sequential
+  // redelivery (arriving after the first one already settled the order) a
+  // no-op. @Version protects against a stale concurrent *write* — it does NOT
+  // prevent a concurrent double-charge if two listener threads both read
+  // CREATED before either saves; RabbitMQ's default listener concurrency of 1
+  // (Task 14's RabbitMQConfig) is what actually keeps that window closed in
+  // practice.
   public void handleInventoryReserved(InventoryReservedReply reply) {
     Order order = orderRepository.findById(reply.orderId())
         .orElseThrow(() -> new OrderNotFoundException(reply.orderId()));

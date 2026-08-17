@@ -174,8 +174,9 @@ class OrderServiceTest {
   void throwsOrderNotFoundWhenReplyReferencesUnknownOrder() {
     initService();
     when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+    InventoryReservedReply reply = new InventoryReservedReply(99L, true, null);
 
-    assertThatThrownBy(() -> orderService.handleInventoryReserved(new InventoryReservedReply(99L, true, null)))
+    assertThatThrownBy(() -> orderService.handleInventoryReserved(reply))
         .isInstanceOf(OrderNotFoundException.class);
   }
 
@@ -186,8 +187,9 @@ class OrderServiceTest {
     ReflectionTestUtils.setField(order, "id", 42L);
     when(orderRepository.findById(42L)).thenReturn(Optional.of(order));
     when(paymentsClient.charge(any(PaymentRequest.class))).thenThrow(feignErrorWithStatus(503));
+    InventoryReservedReply reply = new InventoryReservedReply(42L, true, null);
 
-    assertThatThrownBy(() -> orderService.handleInventoryReserved(new InventoryReservedReply(42L, true, null)))
+    assertThatThrownBy(() -> orderService.handleInventoryReserved(reply))
         .isInstanceOf(UpstreamServiceUnavailableException.class);
 
     // Order stays CREATED — not rolled back, not confirmed. TD-1 stays open
