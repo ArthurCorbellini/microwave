@@ -32,9 +32,10 @@ public class OrderController {
   }
 
   @Operation(summary = "Create a new order",
-      description = "Fetches the product from catalog, persists the order, then charges it through payments.")
+      description = "Fetches the product from catalog, persists the order as CREATED, and returns immediately — "
+          + "the reservation/payment outcome is asynchronous. Poll GET /orders/{id} for the final status.")
   @ApiResponses({
-      @ApiResponse(responseCode = "201", description = "Order created (confirmed or rejected by payments)"),
+      @ApiResponse(responseCode = "201", description = "Order created (status is CREATED — confirmation/rejection happens asynchronously)"),
       @ApiResponse(responseCode = "400", description = "Validation failure",
           content = @Content(schema = @Schema(implementation = ValidationProblemDetail.class))),
       @ApiResponse(responseCode = "404", description = "Product not found in catalog",
