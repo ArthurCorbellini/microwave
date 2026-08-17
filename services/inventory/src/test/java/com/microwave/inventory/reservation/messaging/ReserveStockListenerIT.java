@@ -7,11 +7,9 @@ import com.microwave.inventory.stock.Stock;
 import com.microwave.inventory.stock.StockRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -53,8 +51,6 @@ class ReserveStockListenerIT {
   @Autowired
   private StockRepository stockRepository;
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
-
   @BeforeEach
   void setupTestQueue() {
     // Declare a simple queue for receiving replies
@@ -69,17 +65,15 @@ class ReserveStockListenerIT {
   }
 
   @Test
-  void reservesStockAndRepliesWhenAvailable() throws Exception {
+  void reservesStockAndRepliesWhenAvailable() {
     stockRepository.save(new Stock(1L, 50));
 
     rabbitTemplate.convertAndSend(
         RabbitMQConfig.INVENTORY_EXCHANGE, RabbitMQConfig.RESERVE_STOCK_ROUTING_KEY,
         new ReserveStockCommand(42L, 1L, 5));
 
-    Message message = rabbitTemplate.receive(TEST_REPLY_QUEUE, 10000);
-    assertThat(message).isNotNull();
-    InventoryReservedReply reply = objectMapper.readValue(message.getBody(), InventoryReservedReply.class);
-
+    InventoryReservedReply reply =
+        (InventoryReservedReply) rabbitTemplate.receiveAndConvert(TEST_REPLY_QUEUE, 10000);
     assertThat(reply).isNotNull();
     assertThat(reply.orderId()).isEqualTo(42L);
     assertThat(reply.reserved()).isTrue();
@@ -90,17 +84,15 @@ class ReserveStockListenerIT {
   }
 
   @Test
-  void repliesNotReservedWhenStockInsufficient() throws Exception {
+  void repliesNotReservedWhenStockInsufficient() {
     stockRepository.save(new Stock(2L, 1));
 
     rabbitTemplate.convertAndSend(
         RabbitMQConfig.INVENTORY_EXCHANGE, RabbitMQConfig.RESERVE_STOCK_ROUTING_KEY,
         new ReserveStockCommand(43L, 2L, 5));
 
-    Message message = rabbitTemplate.receive(TEST_REPLY_QUEUE, 10000);
-    assertThat(message).isNotNull();
-    InventoryReservedReply reply = objectMapper.readValue(message.getBody(), InventoryReservedReply.class);
-
+    InventoryReservedReply reply =
+        (InventoryReservedReply) rabbitTemplate.receiveAndConvert(TEST_REPLY_QUEUE, 10000);
     assertThat(reply).isNotNull();
     assertThat(reply.orderId()).isEqualTo(43L);
     assertThat(reply.reserved()).isFalse();

@@ -5,9 +5,12 @@ import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.config.StatelessRetryOperationsInterceptor;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.retry.RepublishMessageRecoverer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
@@ -68,7 +71,7 @@ public class RabbitMQConfig {
 
   @Bean
   MessageConverter jsonMessageConverter() {
-    return new Jackson2JsonMessageConverter();
+    return new Jackson2JsonMessageConverter("com.microwave.inventory.reservation.messaging");
   }
 
   @Bean
@@ -79,12 +82,22 @@ public class RabbitMQConfig {
   }
 
   @Bean
+  StatelessRetryOperationsInterceptor retryInterceptor(RabbitTemplate rabbitTemplate) {
+    return RetryInterceptorBuilder.stateless()
+        .maxRetries(3)
+        .backOffOptions(500, 2.0, 10_000)
+        .recoverer(new RepublishMessageRecoverer(rabbitTemplate, INVENTORY_DLX, RESERVE_STOCK_ROUTING_KEY))
+        .build();
+  }
+
+  @Bean
   SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
-      ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter) {
+      ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter,
+      StatelessRetryOperationsInterceptor retryInterceptor) {
     SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
     factory.setConnectionFactory(connectionFactory);
     factory.setMessageConverter(jsonMessageConverter);
-    factory.setDefaultRequeueRejected(false);
+    factory.setAdviceChain(retryInterceptor);
     return factory;
   }
 }
