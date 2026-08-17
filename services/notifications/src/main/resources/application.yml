@@ -1,0 +1,24 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: notifications
+  datasource:
+    url: jdbc:postgresql://localhost:5432/notifications_db
+    username: notifications
+    password: notifications
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notifications-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
