@@ -1,6 +1,5 @@
 package com.microwave.inventory.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -69,14 +68,7 @@ public class RabbitMQConfig {
 
   @Bean
   MessageConverter jsonMessageConverter() {
-    ObjectMapper mapper = new ObjectMapper();
-    // Enable default typing with a more permissive validator to allow custom domain objects
-    mapper.activateDefaultTyping(
-        com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator.builder()
-            .allowIfBaseType(Object.class)
-            .build(),
-        com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping.NON_FINAL);
-    return new Jackson2JsonMessageConverter(mapper);
+    return new Jackson2JsonMessageConverter();
   }
 
   @Bean
