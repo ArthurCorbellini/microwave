@@ -63,6 +63,15 @@ Configuration for containers is env-var only — no `application.yml` placeholde
 
 Every service exposes `GET /actuator/health` via `spring-boot-starter-actuator`, with `management.endpoints.web.exposure.include=health` — no other actuator endpoint is exposed, since app ports are published to the host. New services should add this from the start; it's used for `docker-compose` healthchecks and `depends_on: condition: service_healthy` ordering, and doubles as the base for Phase 5's Kubernetes liveness/readiness probes.
 
+## Messaging (RabbitMQ and Kafka)
+
+Each service owns the exchange(s)/queue(s) that receive messages addressed to it — mirroring "database per service." A service that needs to *send* to another service's exchange declares that exchange defensively too (declaration is idempotent), so publishing never races the owning service's own startup.
+
+- **RabbitMQ** (point-to-point commands): one `direct` exchange per owning service (e.g. `inventory.exchange`), one queue per command type (e.g. `inventory.reserve-stock.queue`) — not a single shared "commands" queue, since each command type should be independently retryable/observable. Every queue is dead-letter-configured (`x-dead-letter-exchange`/`x-dead-letter-routing-key`) pointing at a `<service>.dlx` exchange and `<service>.<command>.dlq` queue. Retries: 3 attempts, exponential backoff (500ms initial, ×2 multiplier), via Spring AMQP's `RetryTemplate` + `RetryOperationsInterceptor`, with a `RepublishMessageRecoverer` publishing to the dead-letter exchange once exhausted.
+- **Kafka** (domain events): one topic per event, named `<owning-service>.<event-name>` (e.g. `orders.order-created`), keyed by the relevant aggregate id (e.g. `orderId`) so related messages stay ordered on the same partition. Retries: 3 attempts, exponential backoff, via Spring Kafka's `DefaultErrorHandler` + `DeadLetterPublishingRecoverer`, which publishes to `<topic>-dlt` once exhausted.
+- **Message payloads** (commands, replies, events) are plain Java records, hand-duplicated in every service that needs them — same "no shared library between services" rule DTOs already follow for Feign integrations (see this file's DTO section).
+- **Idempotency**: every consumer that mutates state checks for a natural existing-record key before processing (e.g. `inventory` checks for an existing `Reservation` by `orderId`; `notifications` checks for an existing `NotificationLog` by `(orderId, type)`) — at-least-once delivery means redelivery is expected, not exceptional.
+
 ## Out of scope for this file
 
 - Anything specific to a single phase — that belongs in the relevant `docs/superpowers/specs/` or `docs/superpowers/plans/` entry, not here.

@@ -71,6 +71,50 @@ Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at 
 
 **Planned resolution:** `docs/roadmap.md`'s Phase 5 scope already includes Kubernetes `ConfigMaps/Secrets` — that's when real secret management is introduced, replacing both this and Phase 1's `application.yml` credentials.
 
+### TD-6 — Reservations aren't released when payment is declined after a successful reservation
+
+**Introduced in:** Phase 3
+**Where:** `orders`' `OrderService.handleInventoryReserved`, `inventory`'s `Reservation`
+
+If `inventory` successfully reserves stock but the subsequent (still synchronous, in this phase) call to `payments` is declined, the order is correctly marked `REJECTED` — but the `Reservation` stays `RESERVED` and the underlying `Stock` stays decremented. Nothing releases it.
+
+**Why it exists:** compensation (a `ReleaseStock` command back to `inventory`) only makes sense once `payments` itself is commanded asynchronously, matching the same saga pattern — that's explicitly Phase 4's scope, not this one.
+
+**Planned resolution:** Phase 4 (payments moves to asynchronous messaging) adds the compensating `ReleaseStock` command, triggered when a payment decline follows a successful reservation.
+
+### TD-7 — Dead-letter queues exist, but nothing watches them
+
+**Introduced in:** Phase 3
+**Where:** `inventory`'s RabbitMQ consumer (`ReserveStock` command), `orders`' RabbitMQ consumer (`InventoryReserved` reply), `notifications`'s Kafka consumer (`OrderCreated` event), plus their respective dead-letter destinations.
+
+After 3 retry attempts with backoff, a message that still fails processing is moved to a dead-letter queue (RabbitMQ) or a `-dlt` topic (Kafka) instead of looping forever or being silently dropped. But nothing monitors those destinations — no alerting, no automated reprocessing.
+
+**Why it exists:** this phase is scoped to basic messaging correctness — idempotency and a dead-letter safety net are the minimum needed so a permanently-failing message doesn't take down a queue or vanish without a trace. Full resilience tooling is explicitly Phase 7's focus.
+
+**Planned resolution:** Phase 7 (Observability and resilience) adds monitoring/alerting on dead-letter queue depth, and/or tooling to inspect and reprocess dead-lettered messages.
+
+### TD-8 — No automated end-to-end verification across services
+
+**Introduced in:** Phase 2
+**Where:** the full request flow across `catalog`/`orders`/`payments`/`inventory`/`notifications`
+
+There's no automated test that boots the whole system and verifies a request flows correctly end-to-end — verification is a manual checklist run by hand against the real `docker-compose` stack (see this phase's plan, Task 21). Each phase that adds services makes this checklist longer and more tedious to repeat, and easier to skip a step by accident.
+
+**Why it exists:** each service is an independent Maven module (no parent POM, no shared test infrastructure), so there's no clean way to boot multiple services' real Spring contexts together inside a single JUnit test — a limitation of the module structure, not something skipped for time. `TD-5` (resolved in Phase 2) already flagged this as worth revisiting once Phase 3 added `inventory`/`notifications` and the manual checklist grew.
+
+**Planned resolution:** revisit when Phase 8 (BFF) lands — a black-box system-test suite hitting the BFF's composed endpoint(s) against the real running stack (docker-compose or the Phase 5+ cluster) is the natural next step, decided properly as part of that phase's own design, not before.
+
+### TD-9 — Order creation isn't resilient to the message brokers being unreachable
+
+**Introduced in:** Phase 3
+**Where:** `orders`' `OrderService.createOrder`
+
+If RabbitMQ is unreachable when `orders` tries to send the `ReserveStock` command, the order is already persisted as `CREATED` but the command is never sent — the order is permanently stranded, since nothing will ever call `handleInventoryReserved` for it. If Kafka is unreachable when publishing the `OrderCreated` event, the failure is silently swallowed (the returned `CompletableFuture` isn't checked), and the event is simply lost with no signal that anything went wrong.
+
+**Why it exists:** this phase focused on the happy-path async wiring (idempotency, retry/dead-lettering for message *processing* failures) — resilience against the message brokers themselves being unreachable during *publishing* wasn't in scope.
+
+**Planned resolution:** revisit alongside Phase 7 (Observability and resilience), which already covers circuit breakers and is the natural place to add publish-failure handling/retry for both cases.
+
 ## Resolved
 
 ### TD-5 — No automated validation of Dockerfiles or `docker-compose.yml`
