@@ -212,8 +212,6 @@ services:
         condition: service_healthy
       payments:
         condition: service_healthy
-      inventory:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       kafka:

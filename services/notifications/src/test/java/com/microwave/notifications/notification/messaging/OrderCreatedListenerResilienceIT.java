@@ -71,7 +71,7 @@ class OrderCreatedListenerResilienceIT {
   void deadLettersAnEventThatAlwaysFailsToProcess() {
     // orderId=null violates NotificationLog's not-null column constraint on
     // save — OrderCreatedListener catches nothing, so this exhausts all 3
-    // retries and lands on the "orders.order-created.DLT" topic.
+    // retries and lands on the "orders.order-created-dlt" topic.
     OrderCreatedEvent event = new OrderCreatedEvent(null, 1L, 2, new BigDecimal("200.00"), Instant.now());
     kafkaTemplate.send(KafkaConfig.ORDER_CREATED_TOPIC, "dead-letter-test", event);
 

@@ -52,9 +52,9 @@ Branch protection on `main` requires 3 check contexts (`test (catalog)`, `test (
 ### TD-3 — App ports published directly to the host, no gateway in front
 
 **Introduced in:** Phase 2
-**Where:** `docker-compose.yml` — `catalog`, `orders`, `payments` port mappings
+**Where:** `docker-compose.yml` — `catalog`, `orders`, `payments`, `inventory`, `notifications` port mappings, plus RabbitMQ's management UI
 
-All three services' ports (8081/8082/8083) are published directly to the host so the existing Postman/curl-based testing flow keeps working. There's no API Gateway or reverse proxy in front of them.
+All five services' ports (8081-8085) are published directly to the host so the existing Postman/curl-based testing flow keeps working, as is RabbitMQ's management UI (15672). There's no API Gateway or reverse proxy in front of them.
 
 **Why it exists:** `docs/roadmap.md`'s "Deferred decisions" section already defers the API Gateway to Phase 6, where it pairs naturally with Kubernetes Ingress (Phase 5). Phase 2 continues that same deferral — it doesn't introduce a new gap, just makes the existing one visible at the container-networking level.
 
@@ -63,7 +63,7 @@ All three services' ports (8081/8082/8083) are published directly to the host so
 ### TD-4 — DB credentials hardcoded in `docker-compose.yml`
 
 **Introduced in:** Phase 2
-**Where:** `docker-compose.yml` — `catalog-db`, `orders-db`, `payments-db`, and the corresponding `SPRING_DATASOURCE_*` env vars on each service
+**Where:** `docker-compose.yml` — `catalog-db`, `orders-db`, `payments-db`, `inventory-db`, `notifications-db`, and the corresponding `SPRING_DATASOURCE_*` env vars on each service; plus RabbitMQ's `guest`/`guest` credentials, hardcoded in `inventory`'s and `orders`' `application.yml` and left as the default since `docker-compose.yml` sets no RabbitMQ credentials at all
 
 Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at the same security level as the plaintext credentials already present in each service's `application.yml` since Phase 1.
 

@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "stock", uniqueConstraints = @UniqueConstraint(columnNames = "productId"))
@@ -21,6 +22,9 @@ public class Stock {
 
   @Column(nullable = false)
   private int availableQuantity;
+
+  @Version
+  private Long version;
 
   protected Stock() {
   }
@@ -44,5 +48,9 @@ public class Stock {
 
   public int getAvailableQuantity() {
     return availableQuantity;
+  }
+
+  public Long getVersion() {
+    return version;
   }
 }
