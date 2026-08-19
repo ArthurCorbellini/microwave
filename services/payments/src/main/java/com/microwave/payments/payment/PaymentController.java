@@ -1,7 +1,7 @@
 package com.microwave.payments.payment;
 
-import com.microwave.payments.payment.dto.PaymentRequest;
-import com.microwave.payments.payment.dto.PaymentResponse;
+import com.microwave.payments.payment.rest.PaymentRequest;
+import com.microwave.payments.payment.rest.PaymentResponse;
 import com.microwave.payments.error.ValidationProblemDetail;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -1,7 +1,5 @@
 package com.microwave.payments.payment;
 
-import com.microwave.payments.payment.enums.PaymentStatus;
-import com.microwave.payments.payment.exceptions.PaymentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

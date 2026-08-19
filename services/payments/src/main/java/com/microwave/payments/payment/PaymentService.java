@@ -1,8 +1,5 @@
 package com.microwave.payments.payment;
 
-import com.microwave.payments.payment.enums.PaymentStatus;
-import com.microwave.payments.payment.exceptions.PaymentNotFoundException;
-import com.microwave.payments.payment.util.PaymentSimulator;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

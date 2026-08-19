@@ -1,7 +1,7 @@
-package com.microwave.payments.payment.dto;
+package com.microwave.payments.payment.rest;
 
 import com.microwave.payments.payment.Payment;
-import com.microwave.payments.payment.enums.PaymentStatus;
+import com.microwave.payments.payment.PaymentStatus;
 
 import java.math.BigDecimal;
 

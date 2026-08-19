@@ -1,4 +1,4 @@
-package com.microwave.payments.payment.dto;
+package com.microwave.payments.payment.rest;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;

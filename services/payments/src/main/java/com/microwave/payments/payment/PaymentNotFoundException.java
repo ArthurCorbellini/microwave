@@ -1,4 +1,4 @@
-package com.microwave.payments.payment.exceptions;
+package com.microwave.payments.payment;
 
 public class PaymentNotFoundException extends RuntimeException {
 

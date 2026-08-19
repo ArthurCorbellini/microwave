@@ -1,6 +1,4 @@
-package com.microwave.payments.payment.util;
-
-import com.microwave.payments.payment.enums.PaymentStatus;
+package com.microwave.payments.payment;
 
 import java.math.BigDecimal;
 

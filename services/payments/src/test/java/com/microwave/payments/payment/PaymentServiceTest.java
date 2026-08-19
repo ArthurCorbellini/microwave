@@ -1,7 +1,5 @@
 package com.microwave.payments.payment;
 
-import com.microwave.payments.payment.enums.PaymentStatus;
-import com.microwave.payments.payment.exceptions.PaymentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
