@@ -1,4 +1,4 @@
-package com.microwave.notifications.notification.exceptions;
+package com.microwave.notifications.notification;
 
 public class NotificationNotFoundException extends RuntimeException {
 

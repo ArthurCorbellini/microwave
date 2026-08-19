@@ -1,6 +1,6 @@
 package com.microwave.notifications.error;
 
-import com.microwave.notifications.notification.exceptions.NotificationNotFoundException;
+import com.microwave.notifications.notification.NotificationNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;

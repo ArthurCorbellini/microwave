@@ -22,7 +22,7 @@ spring:
       properties:
         spring.json.trusted.packages: com.microwave.notifications.*
         spring.json.use.type.headers: false
-        spring.json.value.default.type: com.microwave.notifications.notification.messaging.OrderCreatedEvent
+        spring.json.value.default.type: com.microwave.notifications.notification.OrderCreatedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

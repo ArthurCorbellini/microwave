@@ -1,7 +1,5 @@
 package com.microwave.notifications.notification;
 
-import com.microwave.notifications.notification.enums.NotificationType;
-import com.microwave.notifications.notification.exceptions.NotificationNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

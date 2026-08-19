@@ -1,4 +1,4 @@
-package com.microwave.notifications.notification.messaging;
+package com.microwave.notifications.notification;
 
 import java.math.BigDecimal;
 import java.time.Instant;

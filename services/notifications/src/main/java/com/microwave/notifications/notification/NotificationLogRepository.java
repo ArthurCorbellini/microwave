@@ -1,6 +1,5 @@
 package com.microwave.notifications.notification;
 
-import com.microwave.notifications.notification.enums.NotificationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,8 +1,6 @@
-package com.microwave.notifications.notification.messaging;
+package com.microwave.notifications.notification;
 
 import com.microwave.notifications.config.KafkaConfig;
-import com.microwave.notifications.notification.NotificationLogRepository;
-import com.microwave.notifications.notification.enums.NotificationType;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -83,7 +81,7 @@ class OrderCreatedListenerResilienceIT {
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
     props.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.microwave.notifications.*");
     props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,
-        "com.microwave.notifications.notification.messaging.OrderCreatedEvent");
+        "com.microwave.notifications.notification.OrderCreatedEvent");
 
     try (KafkaConsumer<String, OrderCreatedEvent> consumer = new KafkaConsumer<>(props)) {
       consumer.subscribe(List.of(KafkaConfig.ORDER_CREATED_TOPIC + "-dlt"));
