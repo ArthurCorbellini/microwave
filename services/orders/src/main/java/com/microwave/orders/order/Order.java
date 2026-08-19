@@ -1,6 +1,5 @@
 package com.microwave.orders.order;
 
-import com.microwave.orders.order.enums.OrderStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

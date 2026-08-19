@@ -1,6 +1,5 @@
 package com.microwave.orders.order;
 
-import com.microwave.orders.order.enums.OrderStatus;
 import com.microwave.orders.order.exceptions.OrderNotFoundException;
 import com.microwave.orders.order.exceptions.ProductNotFoundException;
 import com.microwave.orders.order.exceptions.UpstreamServiceUnavailableException;

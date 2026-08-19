@@ -1,7 +1,6 @@
-package com.microwave.orders.order.messaging;
+package com.microwave.orders.order;
 
 import com.microwave.orders.config.KafkaConfig;
-import com.microwave.orders.order.Order;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 

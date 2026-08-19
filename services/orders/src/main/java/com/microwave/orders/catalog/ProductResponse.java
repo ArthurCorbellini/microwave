@@ -1,4 +1,4 @@
-package com.microwave.orders.catalog.dto;
+package com.microwave.orders.catalog;
 
 import java.math.BigDecimal;
 

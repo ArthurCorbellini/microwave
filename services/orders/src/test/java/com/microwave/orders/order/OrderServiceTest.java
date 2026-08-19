@@ -1,18 +1,16 @@
 package com.microwave.orders.order;
 
 import com.microwave.orders.catalog.CatalogClient;
-import com.microwave.orders.catalog.dto.ProductResponse;
+import com.microwave.orders.catalog.ProductResponse;
 import com.microwave.orders.inventory.ReservationCommandPublisher;
 import com.microwave.orders.inventory.messaging.InventoryReservedReply;
-import com.microwave.orders.order.enums.OrderStatus;
 import com.microwave.orders.order.exceptions.OrderNotFoundException;
 import com.microwave.orders.order.exceptions.ProductNotFoundException;
 import com.microwave.orders.order.exceptions.UpstreamServiceUnavailableException;
-import com.microwave.orders.order.messaging.OrderEventPublisher;
+import com.microwave.orders.payments.PaymentStatus;
 import com.microwave.orders.payments.PaymentsClient;
-import com.microwave.orders.payments.dto.PaymentRequest;
-import com.microwave.orders.payments.dto.PaymentResponse;
-import com.microwave.orders.payments.enums.PaymentStatus;
+import com.microwave.orders.payments.rest.PaymentRequest;
+import com.microwave.orders.payments.rest.PaymentResponse;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;

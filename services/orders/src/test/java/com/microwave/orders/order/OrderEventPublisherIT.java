@@ -1,8 +1,6 @@
-package com.microwave.orders.order.messaging;
+package com.microwave.orders.order;
 
 import com.microwave.orders.config.KafkaConfig;
-import com.microwave.orders.order.Order;
-import com.microwave.orders.order.enums.OrderStatus;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -54,7 +52,7 @@ class OrderEventPublisherIT {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
     props.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.microwave.orders.*");
-    props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, "com.microwave.orders.order.messaging.OrderCreatedEvent");
+    props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, "com.microwave.orders.order.OrderCreatedEvent");
 
     try (KafkaConsumer<String, OrderCreatedEvent> consumer = new KafkaConsumer<>(props)) {
       consumer.subscribe(List.of(KafkaConfig.ORDER_CREATED_TOPIC));

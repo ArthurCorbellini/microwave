@@ -1,4 +1,4 @@
-package com.microwave.orders.payments.enums;
+package com.microwave.orders.payments;
 
 public enum PaymentStatus {
   APPROVED,

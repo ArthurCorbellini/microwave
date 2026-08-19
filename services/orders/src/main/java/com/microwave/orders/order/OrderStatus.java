@@ -1,4 +1,4 @@
-package com.microwave.orders.order.enums;
+package com.microwave.orders.order;
 
 public enum OrderStatus {
   CREATED,

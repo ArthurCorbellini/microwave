@@ -1,8 +1,8 @@
 package com.microwave.orders.order;
 
 import com.microwave.orders.error.ValidationProblemDetail;
-import com.microwave.orders.order.dto.OrderRequest;
-import com.microwave.orders.order.dto.OrderResponse;
+import com.microwave.orders.order.rest.OrderRequest;
+import com.microwave.orders.order.rest.OrderResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

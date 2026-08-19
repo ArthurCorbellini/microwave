@@ -1,4 +1,4 @@
-package com.microwave.orders.order.dto;
+package com.microwave.orders.order.rest;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

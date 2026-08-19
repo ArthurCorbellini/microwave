@@ -1,6 +1,6 @@
-package com.microwave.orders.payments.dto;
+package com.microwave.orders.payments.rest;
 
-import com.microwave.orders.payments.enums.PaymentStatus;
+import com.microwave.orders.payments.PaymentStatus;
 
 import java.math.BigDecimal;
 

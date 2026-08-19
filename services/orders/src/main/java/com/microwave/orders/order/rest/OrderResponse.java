@@ -1,7 +1,7 @@
-package com.microwave.orders.order.dto;
+package com.microwave.orders.order.rest;
 
 import com.microwave.orders.order.Order;
-import com.microwave.orders.order.enums.OrderStatus;
+import com.microwave.orders.order.OrderStatus;
 
 import java.math.BigDecimal;
 
