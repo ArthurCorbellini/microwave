@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Testcontainers
@@ -48,5 +49,20 @@ class OrderRepositoryIT {
     Optional<Order> found = orderRepository.findById(saved.getId());
     assertThat(found).isPresent();
     assertThat(found.get().getStatus()).isEqualTo(OrderStatus.CONFIRMED);
+  }
+
+  @Test
+  void throwsOptimisticLockingFailureOnStaleUpdate() {
+    Order saved = orderRepository.save(new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CREATED));
+
+    Order copy1 = orderRepository.findById(saved.getId()).orElseThrow();
+    Order copy2 = orderRepository.findById(saved.getId()).orElseThrow();
+
+    copy1.updateStatus(OrderStatus.CONFIRMED);
+    orderRepository.saveAndFlush(copy1);
+
+    copy2.updateStatus(OrderStatus.REJECTED);
+    assertThatThrownBy(() -> orderRepository.saveAndFlush(copy2))
+        .isInstanceOf(org.springframework.orm.ObjectOptimisticLockingFailureException.class);
   }
 }

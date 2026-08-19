@@ -4,7 +4,7 @@ Living description of the system's macro topology — how services, brokers, and
 
 Update the "Current architecture" section each time a phase lands, the same way [`docs/conventions.md`](conventions.md) is kept current — don't wait until the whole roadmap is finished.
 
-## Current architecture (as of Phase 2)
+## Current architecture (as of Phase 3)
 
 ```mermaid
 flowchart LR
@@ -14,22 +14,35 @@ flowchart LR
         Catalog[catalog]
         Orders[orders]
         Payments[payments]
+        Inventory[inventory]
+        Notifications[notifications]
     end
+
+    Kafka{{Kafka}}
 
     Client -->|REST| Catalog
     Client -->|REST| Orders
     Client -->|REST| Payments
+    Client -->|REST| Inventory
+    Client -->|REST| Notifications
     Orders -->|REST, sync| Catalog
     Orders -->|REST, sync| Payments
+    Orders -->|"RabbitMQ command/reply"| Inventory
+    Orders -->|"Kafka event"| Kafka
+    Kafka --> Notifications
 
     Catalog --- CatalogDB[(catalog_db)]
     Orders --- OrdersDB[(orders_db)]
     Payments --- PaymentsDB[(payments_db)]
+    Inventory --- InventoryDB[(inventory_db)]
+    Notifications --- NotificationsDB[(notifications_db)]
 ```
 
-- Every service is reachable directly — ports are published to the host (see [`TD-3`](decision-log/tech-debts.md)).
-- `orders` is the only service that calls another service; both calls are synchronous REST via Feign.
-- Database per service, all running as Postgres containers via `docker-compose.yml`.
+- `orders` → `payments` and `orders` → `catalog` are still synchronous REST, unchanged since Phase 1.
+- `orders` → `inventory` is a RabbitMQ command/reply (`ReserveStock`/`InventoryReserved`) — no direct REST call between them.
+- `orders` publishes `OrderCreated` to Kafka; `notifications` consumes it independently, decoupled from `orders`.
+- Every service is still reachable directly — ports are published to the host (see [`TD-3`](decision-log/tech-debts.md), still open).
+- Database per service, now 5 instead of 3, plus RabbitMQ and Kafka as new shared infrastructure (each with a single instance, no per-service broker).
 
 ## Target architecture (end of Phase 8)
 

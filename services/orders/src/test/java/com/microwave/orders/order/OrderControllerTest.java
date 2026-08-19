@@ -31,7 +31,7 @@ class OrderControllerTest {
 
   @Test
   void createsOrder() throws Exception {
-    Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CONFIRMED);
+    Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CREATED);
     when(orderService.createOrder(1L, 2)).thenReturn(order);
 
     mockMvc.perform(post("/orders")
@@ -40,7 +40,7 @@ class OrderControllerTest {
                 {"productId":1,"quantity":2}
                 """))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.status").value("CONFIRMED"));
+        .andExpect(jsonPath("$.status").value("CREATED"));
   }
 
   @Test
@@ -102,7 +102,7 @@ class OrderControllerTest {
 
   @Test
   void returnsServiceUnavailableWhenUpstreamFails() throws Exception {
-    doThrow(new UpstreamServiceUnavailableException("payments", new RuntimeException("boom")))
+    doThrow(new UpstreamServiceUnavailableException("catalog", new RuntimeException("boom")))
         .when(orderService).createOrder(1L, 2);
 
     mockMvc.perform(post("/orders")

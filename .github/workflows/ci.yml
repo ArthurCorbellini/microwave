@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [catalog, orders, payments]
+        service: [catalog, orders, payments, inventory, notifications]
 
     steps:
       - uses: actions/checkout@v5
@@ -44,7 +44,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [catalog, orders, payments]
+        service: [catalog, orders, payments, inventory, notifications]
 
     steps:
       - uses: actions/checkout@v5

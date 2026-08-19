@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.math.BigDecimal;
 
@@ -32,6 +33,9 @@ public class Order {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private OrderStatus status;
+
+  @Version
+  private Long version;
 
   protected Order() {
   }
@@ -65,5 +69,9 @@ public class Order {
 
   public OrderStatus getStatus() {
     return status;
+  }
+
+  public Long getVersion() {
+    return version;
   }
 }
