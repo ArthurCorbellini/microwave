@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.testcontainers.kafka.ConfluentKafkaContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -80,9 +80,9 @@ class OrderCreatedListenerResilienceIT {
     props.put(ConsumerConfig.GROUP_ID_CONFIG, "dlt-test-consumer");
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-    props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.microwave.notifications.*");
-    props.put(JsonDeserializer.VALUE_DEFAULT_TYPE,
+    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
+    props.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.microwave.notifications.*");
+    props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,
         "com.microwave.notifications.notification.messaging.OrderCreatedEvent");
 
     try (KafkaConsumer<String, OrderCreatedEvent> consumer = new KafkaConsumer<>(props)) {
