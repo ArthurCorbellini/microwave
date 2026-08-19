@@ -1,6 +1,5 @@
 package com.microwave.catalog.product;
 
-import com.microwave.catalog.product.exceptions.ProductNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

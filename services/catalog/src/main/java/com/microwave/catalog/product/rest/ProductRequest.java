@@ -1,4 +1,4 @@
-package com.microwave.catalog.product.dto;
+package com.microwave.catalog.product.rest;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;

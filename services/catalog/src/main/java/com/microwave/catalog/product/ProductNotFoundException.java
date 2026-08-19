@@ -1,4 +1,4 @@
-package com.microwave.catalog.product.exceptions;
+package com.microwave.catalog.product;
 
 public class ProductNotFoundException extends RuntimeException {
 
