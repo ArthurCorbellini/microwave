@@ -1,4 +1,4 @@
-package com.microwave.inventory.reservation.enums;
+package com.microwave.inventory.reservation;
 
 public enum ReservationStatus {
   RESERVED,

@@ -1,6 +1,5 @@
 package com.microwave.inventory.reservation;
 
-import com.microwave.inventory.reservation.enums.ReservationStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,8 +1,8 @@
-package com.microwave.inventory.reservation.messaging;
+package com.microwave.inventory.reservation;
 
 import com.microwave.inventory.config.RabbitMQConfig;
-import com.microwave.inventory.reservation.Reservation;
-import com.microwave.inventory.reservation.ReservationRepository;
+import com.microwave.inventory.reservation.messaging.InventoryReservedReply;
+import com.microwave.inventory.reservation.messaging.ReserveStockCommand;
 import com.microwave.inventory.stock.Stock;
 import com.microwave.inventory.stock.StockRepository;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,7 +1,4 @@
-package com.microwave.inventory.reservation.dto;
-
-import com.microwave.inventory.reservation.Reservation;
-import com.microwave.inventory.reservation.enums.ReservationStatus;
+package com.microwave.inventory.reservation;
 
 import java.time.Instant;
 

@@ -1,6 +1,5 @@
 package com.microwave.inventory.reservation;
 
-import com.microwave.inventory.reservation.dto.ReservationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
