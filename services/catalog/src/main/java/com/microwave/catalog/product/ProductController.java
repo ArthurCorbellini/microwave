@@ -1,7 +1,7 @@
 package com.microwave.catalog.product;
 
-import com.microwave.catalog.product.dto.ProductRequest;
-import com.microwave.catalog.product.dto.ProductResponse;
+import com.microwave.catalog.product.rest.ProductRequest;
+import com.microwave.catalog.product.rest.ProductResponse;
 import com.microwave.catalog.error.ValidationProblemDetail;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

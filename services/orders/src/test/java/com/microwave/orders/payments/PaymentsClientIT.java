@@ -2,9 +2,8 @@ package com.microwave.orders.payments;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.microwave.orders.order.OrderRepository;
-import com.microwave.orders.payments.dto.PaymentRequest;
-import com.microwave.orders.payments.dto.PaymentResponse;
-import com.microwave.orders.payments.enums.PaymentStatus;
+import com.microwave.orders.payments.rest.PaymentRequest;
+import com.microwave.orders.payments.rest.PaymentResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

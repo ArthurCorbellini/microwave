@@ -4,22 +4,36 @@ Living description of the shared code architecture across services — the "how,
 
 ## Package layout
 
-Each service follows the same shape, rooted at `com.microwave.<service>`:
+Each service follows the same shape, rooted at `com.microwave.<service>`. Within each feature package — a domain concept the service owns, or an integration boundary to another service — apply one rule to every kind of file (entity, `Service`, `Controller`, `Repository`, `Client`, `Publisher`, `Listener`, `rest`, `events`, `messaging`, `enums`, `exceptions`):
 
+**A single file of a kind stays flat in the feature root. Two or more files of the same kind move into a subpackage named for that kind.**
+
+Count each kind coarsely, not by exact class name: REST request and response together count as one kind (`rest/`); RabbitMQ command and reply together count as one kind (`messaging/`). This isn't a one-time decision — when a second file of a kind appears later, move the existing single file into a newly-created subpackage at that time.
+
+Subpackages are named after the protocol/kind, not a generic label — `rest/`, `events/`, `messaging/`, not `dto/`: the classes inside are still DTOs in the general sense (see the DTOs section below), but the folder name says which boundary they belong to.
+
+Example (`orders`' `order/` package — 2 rest payloads, 3 exceptions, but only 1 of everything else):
 ```
-<service>/
-├── config/              # cross-cutting Spring config (e.g. OpenApiConfig)
-├── error/                # cross-cutting error handling (GlobalExceptionHandler, ValidationProblemDetail, FieldErrorDetail)
-└── <domain>/             # one package per domain concept (e.g. product, order, payment)
-    ├── <Domain>.java             # JPA entity
-    ├── <Domain>Repository.java
-    ├── <Domain>Service.java
-    ├── <Domain>Controller.java
-    ├── dto/                       # request/response records for this domain
-    └── exceptions/                # domain-specific exceptions (e.g. ProductNotFoundException)
+order/
+├── Order.java
+├── OrderController.java
+├── OrderService.java
+├── OrderRepository.java
+├── OrderEventPublisher.java
+├── OrderStatus.java
+├── OrderCreatedEvent.java
+├── rest/
+│   ├── OrderRequest.java
+│   └── OrderResponse.java
+└── exceptions/
+    ├── OrderNotFoundException.java
+    ├── ProductNotFoundException.java
+    └── UpstreamServiceUnavailableException.java
 ```
 
-`orders` additionally has `catalog/` and `payments/` sub-packages holding the DTOs/clients used to call those services — one sub-package per upstream service it integrates with, mirroring the boundary rather than dumping everything into `order/`.
+If a feature package is about to get a **second** `Controller`, `Service`, or `Repository`, pause before applying the rule mechanically: that's usually a sign two separate aggregates are hiding inside one feature (see `inventory`'s `stock/` vs `reservation/` split), and splitting into a new feature package is often the better fix than a subpackage. A child entity with no independent existence — e.g. a future `OrderItem`, only ever loaded/saved through `Order` — doesn't get its own `Controller`/`Service`/`Repository` at all, since nothing should reach it except through the aggregate root.
+
+`orders` additionally has `catalog/`, `payments/`, and `inventory/` sub-packages — one per service it integrates with, mirroring that boundary rather than dumping everything into `order/`.
 
 ## DTOs
 

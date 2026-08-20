@@ -1,6 +1,6 @@
 package com.microwave.payments.error;
 
-import com.microwave.payments.payment.exceptions.PaymentNotFoundException;
+import com.microwave.payments.payment.PaymentNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;

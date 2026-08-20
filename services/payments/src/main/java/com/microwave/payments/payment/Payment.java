@@ -1,6 +1,5 @@
 package com.microwave.payments.payment;
 
-import com.microwave.payments.payment.enums.PaymentStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

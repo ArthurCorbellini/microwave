@@ -5,7 +5,7 @@ import com.microwave.orders.config.RabbitMQConfig;
 import com.microwave.orders.inventory.messaging.InventoryReservedReply;
 import com.microwave.orders.order.Order;
 import com.microwave.orders.order.OrderRepository;
-import com.microwave.orders.order.enums.OrderStatus;
+import com.microwave.orders.order.OrderStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

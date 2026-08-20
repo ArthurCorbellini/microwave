@@ -1,6 +1,5 @@
 package com.microwave.notifications.notification;
 
-import com.microwave.notifications.notification.dto.NotificationLogResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

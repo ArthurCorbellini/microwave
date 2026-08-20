@@ -1,6 +1,5 @@
 package com.microwave.payments.payment;
 
-import com.microwave.payments.payment.enums.PaymentStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,6 +1,5 @@
 package com.microwave.inventory.reservation;
 
-import com.microwave.inventory.reservation.enums.ReservationStatus;
 import com.microwave.inventory.reservation.exceptions.ReservationNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

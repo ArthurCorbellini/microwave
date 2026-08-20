@@ -1,6 +1,6 @@
 package com.microwave.catalog.error;
 
-import com.microwave.catalog.product.exceptions.ProductNotFoundException;
+import com.microwave.catalog.product.ProductNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;

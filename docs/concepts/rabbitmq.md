@@ -108,7 +108,7 @@ moment, the message isn't lost — it waits.
 A consumer attaches directly to a queue by name, never to an exchange:
 
 ```java
-// services/inventory/.../reservation/messaging/ReserveStockListener.java
+// services/inventory/.../reservation/ReserveStockListener.java
 @RabbitListener(queues = RabbitMQConfig.RESERVE_STOCK_QUEUE, ...)
 public void handle(ReserveStockCommand command) { ... }
 ```

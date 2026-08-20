@@ -1,6 +1,5 @@
 package com.microwave.catalog.product;
 
-import com.microwave.catalog.product.exceptions.ProductNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

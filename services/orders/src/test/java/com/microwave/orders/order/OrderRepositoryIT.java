@@ -1,6 +1,5 @@
 package com.microwave.orders.order;
 
-import com.microwave.orders.order.enums.OrderStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

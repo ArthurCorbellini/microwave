@@ -20,7 +20,7 @@ queue (storage), binding (the rule connecting them). Kafka collapses all of
 that into one: the **topic**.
 
 ```java
-// services/orders/.../order/messaging/OrderEventPublisher.java
+// services/orders/.../order/OrderEventPublisher.java
 kafkaTemplate.send(KafkaConfig.ORDER_CREATED_TOPIC, order.getId().toString(), event);
 ```
 
@@ -134,7 +134,7 @@ now on. `earliest` makes sense here so a service that starts up later
 doesn't silently miss everything published before it existed.
 
 ```java
-// services/notifications/.../notification/messaging/OrderCreatedListener.java
+// services/notifications/.../notification/OrderCreatedListener.java
 @KafkaListener(topics = KafkaConfig.ORDER_CREATED_TOPIC)
 public void handle(OrderCreatedEvent event) { ... }
 ```

@@ -1,7 +1,6 @@
 package com.microwave.orders.catalog;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.microwave.orders.catalog.dto.ProductResponse;
 import com.microwave.orders.order.OrderRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

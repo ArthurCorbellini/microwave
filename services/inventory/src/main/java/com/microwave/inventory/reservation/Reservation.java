@@ -1,6 +1,5 @@
 package com.microwave.inventory.reservation;
 
-import com.microwave.inventory.reservation.enums.ReservationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
