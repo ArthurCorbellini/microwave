@@ -15,8 +15,7 @@ class ValidationProblemDetailTest {
     ValidationProblemDetail first = new ValidationProblemDetail(HttpStatus.BAD_REQUEST, "Validation failed", errors);
     ValidationProblemDetail second = new ValidationProblemDetail(HttpStatus.BAD_REQUEST, "Validation failed", errors);
 
-    assertThat(first).isEqualTo(second);
-    assertThat(first.hashCode()).isEqualTo(second.hashCode());
+    assertThat(first).isEqualTo(second).hasSameHashCodeAs(second);
   }
 
   @Test
@@ -34,8 +33,8 @@ class ValidationProblemDetailTest {
     ValidationProblemDetail detail = new ValidationProblemDetail(HttpStatus.BAD_REQUEST, "Validation failed",
         List.of(new FieldErrorDetail("name", "must not be blank")));
 
-    assertThat(detail.equals(detail)).isTrue();
-    assertThat(detail.equals(null)).isFalse();
-    assertThat(detail.equals("not a ValidationProblemDetail")).isFalse();
+    assertThat(detail).isEqualTo(detail)
+        .isNotEqualTo(null)
+        .isNotEqualTo("not a ValidationProblemDetail");
   }
 }
