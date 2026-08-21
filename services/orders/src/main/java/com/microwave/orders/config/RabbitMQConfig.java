@@ -27,6 +27,13 @@ public class RabbitMQConfig {
 
   public static final String INVENTORY_EXCHANGE = "inventory.exchange";
   public static final String RESERVE_STOCK_ROUTING_KEY = "reserve-stock";
+  public static final String RELEASE_STOCK_ROUTING_KEY = "release-stock";
+
+  public static final String PAYMENTS_EXCHANGE = "payments.exchange";
+  public static final String CHARGE_PAYMENT_ROUTING_KEY = "charge-payment";
+  public static final String PAYMENT_PROCESSED_QUEUE = "orders.payment-reply.queue";
+  public static final String PAYMENT_PROCESSED_ROUTING_KEY = "payment-processed";
+  public static final String PAYMENT_PROCESSED_DLQ = "orders.payment-reply.dlq";
 
   @Bean
   DirectExchange ordersExchange() {
@@ -35,9 +42,16 @@ public class RabbitMQConfig {
 
   @Bean
   DirectExchange inventoryExchange() {
-    // Declared defensively so publishing ReserveStock never races against
-    // inventory's own declaration of this exchange on startup.
+    // Declared defensively so publishing ReserveStock/ReleaseStock never
+    // races against inventory's own declaration of this exchange on startup.
     return new DirectExchange(INVENTORY_EXCHANGE);
+  }
+
+  @Bean
+  DirectExchange paymentsExchange() {
+    // Declared defensively so publishing ChargePayment never races against
+    // payments' own declaration of this exchange on startup.
+    return new DirectExchange(PAYMENTS_EXCHANGE);
   }
 
   @Bean
@@ -70,8 +84,33 @@ public class RabbitMQConfig {
   }
 
   @Bean
+  Queue paymentProcessedQueue() {
+    return QueueBuilder.durable(PAYMENT_PROCESSED_QUEUE)
+        .withArgument("x-dead-letter-exchange", ORDERS_DLX)
+        .withArgument("x-dead-letter-routing-key", PAYMENT_PROCESSED_ROUTING_KEY)
+        .build();
+  }
+
+  @Bean
+  Queue paymentProcessedDeadLetterQueue() {
+    return QueueBuilder.durable(PAYMENT_PROCESSED_DLQ).build();
+  }
+
+  @Bean
+  Binding paymentProcessedBinding() {
+    return BindingBuilder.bind(paymentProcessedQueue()).to(ordersExchange()).with(PAYMENT_PROCESSED_ROUTING_KEY);
+  }
+
+  @Bean
+  Binding paymentProcessedDeadLetterBinding() {
+    return BindingBuilder.bind(paymentProcessedDeadLetterQueue()).to(ordersDeadLetterExchange())
+        .with(PAYMENT_PROCESSED_ROUTING_KEY);
+  }
+
+  @Bean
   MessageConverter jsonMessageConverter() {
-    return new JacksonJsonMessageConverter("com.microwave.orders.inventory.messaging");
+    return new JacksonJsonMessageConverter(
+        "com.microwave.orders.inventory.messaging", "com.microwave.orders.payments.messaging");
   }
 
   @Bean
@@ -82,7 +121,7 @@ public class RabbitMQConfig {
   }
 
   @Bean
-  StatelessRetryOperationsInterceptor retryInterceptor(RabbitTemplate rabbitTemplate) {
+  StatelessRetryOperationsInterceptor inventoryReplyRetryInterceptor(RabbitTemplate rabbitTemplate) {
     return RetryInterceptorBuilder.stateless()
         .maxRetries(3)
         .backOffOptions(500, 2.0, 10_000)
@@ -91,13 +130,33 @@ public class RabbitMQConfig {
   }
 
   @Bean
-  SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+  SimpleRabbitListenerContainerFactory inventoryReplyListenerContainerFactory(
       ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter,
-      StatelessRetryOperationsInterceptor retryInterceptor) {
+      StatelessRetryOperationsInterceptor inventoryReplyRetryInterceptor) {
     SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
     factory.setConnectionFactory(connectionFactory);
     factory.setMessageConverter(jsonMessageConverter);
-    factory.setAdviceChain(retryInterceptor);
+    factory.setAdviceChain(inventoryReplyRetryInterceptor);
+    return factory;
+  }
+
+  @Bean
+  StatelessRetryOperationsInterceptor paymentReplyRetryInterceptor(RabbitTemplate rabbitTemplate) {
+    return RetryInterceptorBuilder.stateless()
+        .maxRetries(3)
+        .backOffOptions(500, 2.0, 10_000)
+        .recoverer(new RepublishMessageRecoverer(rabbitTemplate, ORDERS_DLX, PAYMENT_PROCESSED_ROUTING_KEY))
+        .build();
+  }
+
+  @Bean
+  SimpleRabbitListenerContainerFactory paymentReplyListenerContainerFactory(
+      ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter,
+      StatelessRetryOperationsInterceptor paymentReplyRetryInterceptor) {
+    SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+    factory.setConnectionFactory(connectionFactory);
+    factory.setMessageConverter(jsonMessageConverter);
+    factory.setAdviceChain(paymentReplyRetryInterceptor);
     return factory;
   }
 }
