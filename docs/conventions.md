@@ -104,6 +104,18 @@ Missing either half leaves the new service silently at zero coverage and zero st
 
 The `sonar` check is **advisory-only**: results surface on SonarCloud's dashboard and via its PR decoration comment, but `sonar` is deliberately excluded from `main`'s required status checks (verified via the GitHub branch protection API) — a red `sonar` result never blocks a merge.
 
+All 5 SonarCloud projects are public, so their results are queryable via `sonarcloud.io/api/...` with plain `curl` — no token/auth needed for reads (a token is only required to *write* a new analysis via `sonar:sonar`):
+
+```bash
+# Metrics (coverage, bugs, vulnerabilities, ratings, etc.)
+curl -s "https://sonarcloud.io/api/measures/component?component=ArthurCorbellini_microwave-<service>&metricKeys=bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,ncloc,security_hotspots,reliability_rating,security_rating,sqale_rating,sqale_index"
+
+# Issue list (rule, severity, message, file:line, estimated effort)
+curl -s "https://sonarcloud.io/api/issues/search?componentKeys=ArthurCorbellini_microwave-<service>&statuses=OPEN,CONFIRMED&types=CODE_SMELL&ps=50"
+```
+
+Swap `<service>` for `catalog`/`orders`/`payments`/`inventory`/`notifications`; `types` also accepts `BUG`/`VULNERABILITY`, or omit it for everything.
+
 ## Containerization
 
 Each service has a multi-stage `Dockerfile` (`services/<service>/Dockerfile`): a `maven:3.9.16-eclipse-temurin-25` build stage running `mvn package -Dmaven.test.skip=true`, and an `eclipse-temurin:25-jre` runtime stage that installs `curl` (required by the `docker-compose` healthchecks below) before copying the built `.jar`. Tests never run inside the image build — that's already covered by CI (Phase 1.1) on every PR. Each service also has a `.dockerignore` (excludes `target/`) to keep the build context small.
