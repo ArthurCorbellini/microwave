@@ -27,17 +27,6 @@ When a limitation is actually fixed, move its entry under `## Resolved` and add 
 
 ## Open
 
-### TD-1 — Orders can get stuck in `CREATED` if `payments` is unreachable
-
-**Introduced in:** Phase 1
-**Where:** `orders` service, `POST /orders` flow
-
-If the call to `payments` fails for a technical reason (service down, timeout — not a business rejection), the order is already persisted with `status=CREATED` and is never moved to `CONFIRMED` or `REJECTED`. There's no retry, no saga, no compensation. The client gets a `503`, but the order row is left in an unresolved state with no automatic follow-up.
-
-**Why it exists:** Phase 1 is scoped to synchronous REST only, deliberately, to focus on service boundaries and API contracts before introducing messaging.
-
-**Planned resolution:** Phase 4 (payments moves to asynchronous messaging) replaces this synchronous chain with a RabbitMQ command/reply, which naturally supports retry and eventual consistency. Revisit this specific flow when designing Phase 4's payment-command sequence. (Phase 3 introduces the same RabbitMQ pattern first, but for Inventory — Payments stays synchronous through Phase 3, so this entry stays open until Phase 4.)
-
 ### TD-2 — Branch protection's required checks are hardcoded, not derived from the CI matrix
 
 **Introduced in:** Phase 1.1
@@ -71,23 +60,14 @@ Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at 
 
 **Planned resolution:** `docs/roadmap.md`'s Phase 5 scope already includes Kubernetes `ConfigMaps/Secrets` — that's when real secret management is introduced, replacing both this and Phase 1's `application.yml` credentials.
 
-### TD-6 — Reservations aren't released when payment is declined after a successful reservation
-
-**Introduced in:** Phase 3
-**Where:** `orders`' `OrderService.handleInventoryReserved`, `inventory`'s `Reservation`
-
-If `inventory` successfully reserves stock but the subsequent (still synchronous, in this phase) call to `payments` is declined, the order is correctly marked `REJECTED` — but the `Reservation` stays `RESERVED` and the underlying `Stock` stays decremented. Nothing releases it.
-
-**Why it exists:** compensation (a `ReleaseStock` command back to `inventory`) only makes sense once `payments` itself is commanded asynchronously, matching the same saga pattern — that's explicitly Phase 4's scope, not this one.
-
-**Planned resolution:** Phase 4 (payments moves to asynchronous messaging) adds the compensating `ReleaseStock` command, triggered when a payment decline follows a successful reservation.
-
 ### TD-7 — Dead-letter queues exist, but nothing watches them
 
 **Introduced in:** Phase 3
-**Where:** `inventory`'s RabbitMQ consumer (`ReserveStock` command), `orders`' RabbitMQ consumer (`InventoryReserved` reply), `notifications`'s Kafka consumer (`OrderCreated` event), plus their respective dead-letter destinations.
+**Where:** `inventory`'s RabbitMQ consumers (`ReserveStock`, `ReleaseStock` commands), `orders`' RabbitMQ consumers (`InventoryReserved`, `PaymentProcessed` replies), `payments`' RabbitMQ consumer (`ChargePayment` command), `notifications`'s Kafka consumer (`OrderCreated` event), plus their respective dead-letter destinations.
 
 After 3 retry attempts with backoff, a message that still fails processing is moved to a dead-letter queue (RabbitMQ) or a `-dlt` topic (Kafka) instead of looping forever or being silently dropped. But nothing monitors those destinations — no alerting, no automated reprocessing.
+
+Phase 4 added three more dead-letter destinations (`payments.charge-payment.dlq`, `orders.payment-reply.dlq`, `inventory.release-stock.dlq`) — same unmonitored-DLQ gap, not a new failure mode.
 
 **Why it exists:** this phase is scoped to basic messaging correctness — idempotency and a dead-letter safety net are the minimum needed so a permanently-failing message doesn't take down a queue or vanish without a trace. Full resilience tooling is explicitly Phase 7's focus.
 
@@ -107,9 +87,11 @@ There's no automated test that boots the whole system and verifies a request flo
 ### TD-9 — Order creation isn't resilient to the message brokers being unreachable
 
 **Introduced in:** Phase 3
-**Where:** `orders`' `OrderService.createOrder`
+**Where:** `orders`' `OrderService.createOrder`, `OrderService.handleInventoryReserved` (via `PaymentCommandPublisher.sendChargePayment`), `OrderService.handlePaymentProcessed` (via `ReservationCommandPublisher.sendReleaseStock`)
 
 If RabbitMQ is unreachable when `orders` tries to send the `ReserveStock` command, the order is already persisted as `CREATED` but the command is never sent — the order is permanently stranded, since nothing will ever call `handleInventoryReserved` for it. If Kafka is unreachable when publishing the `OrderCreated` event, the failure is silently swallowed (the returned `CompletableFuture` isn't checked), and the event is simply lost with no signal that anything went wrong.
+
+Phase 4 added two more unguarded publish call sites (`ChargePayment`, `ReleaseStock`) — they inherit the same gap `ReserveStock` already had, not a new one.
 
 **Why it exists:** this phase focused on the happy-path async wiring (idempotency, retry/dead-lettering for message *processing* failures) — resilience against the message brokers themselves being unreachable during *publishing* wasn't in scope.
 
@@ -129,3 +111,25 @@ CI (`.github/workflows/ci.yml`) only ran `mvn -B verify` per service; it never b
 **Resolved in:** Phase 2 (same PR), by adding a `docker-build` matrix job to `.github/workflows/ci.yml` (mirroring the existing `test` matrix) that runs `docker build services/<service>` for each of the 3 services, with `docker-build (catalog)`, `docker-build (orders)`, `docker-build (payments)` added as required status checks on `main`'s branch protection alongside the existing `test (*)` checks. This closes the specific gap this entry described — a fix to one Dockerfile not synced to the others can no longer merge green.
 
 Note: this validates that each service's **Dockerfile builds successfully**, not that `docker-compose.yml`'s own orchestration (healthchecks, `depends_on` ordering, env-var wiring) is correct — that's still verified manually only (see Task 5 of the Phase 2 plan). Revisit if that gap needs closing too, e.g. once Phase 3 adds `inventory`/`notifications` and manual verification gets more expensive to repeat by hand.
+
+### TD-1 — Orders can get stuck in `CREATED` if `payments` is unreachable
+
+**Introduced in:** Phase 1
+**Where:** `orders` service, `POST /orders` flow
+
+If the call to `payments` failed for a technical reason (service down, timeout — not a business rejection), the order was persisted with `status=CREATED` and never moved to `CONFIRMED` or `REJECTED`. There was no retry, no saga, no compensation.
+
+**Why it existed:** Phase 1 was scoped to synchronous REST only, deliberately, to focus on service boundaries and API contracts before introducing messaging.
+
+**Resolved in:** Phase 4, by replacing the synchronous `orders` → `payments` REST call with a `ChargePayment`/`PaymentProcessed` RabbitMQ command/reply. An unreachable `payments` no longer strands the order — the command waits in `payments.charge-payment.queue` until `payments` is back up and consumes it, and RabbitMQ's own retry/redelivery covers processing failures once it does.
+
+### TD-6 — Reservations aren't released when payment is declined after a successful reservation
+
+**Introduced in:** Phase 3
+**Where:** `orders`' `OrderService`, `inventory`'s `Reservation`
+
+If `inventory` successfully reserved stock but the subsequent call to `payments` was declined, the order was correctly marked `REJECTED` — but the `Reservation` stayed `RESERVED` and the underlying `Stock` stayed decremented. Nothing released it.
+
+**Why it existed:** compensation (a `ReleaseStock` command back to `inventory`) only makes sense once `payments` itself is commanded asynchronously, matching the same saga pattern — that was explicitly Phase 4's scope, not Phase 3's.
+
+**Resolved in:** Phase 4, by adding a `ReleaseStock` command (`orders` → `inventory`, fire-and-forget) sent whenever `OrderService.handlePaymentProcessed` sees a declined `PaymentProcessedReply`. `ReservationService.release` restores `Stock` and marks the `Reservation` `RELEASED`, idempotently.
