@@ -93,8 +93,8 @@ class OrderCreatedListenerResilienceIT {
       }
 
       assertThat(records.count()).isEqualTo(1);
-      ConsumerRecord<String, OrderCreatedEvent> record = records.iterator().next();
-      assertThat(record.value().productId()).isEqualTo(1L);
+      ConsumerRecord<String, OrderCreatedEvent> consumerRecord = records.iterator().next();
+      assertThat(consumerRecord.value().productId()).isEqualTo(1L);
     }
   }
 }

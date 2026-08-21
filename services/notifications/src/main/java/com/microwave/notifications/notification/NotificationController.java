@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,11 +21,9 @@ public class NotificationController {
   }
 
   @Operation(summary = "Get the notification logged for an order")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Notification found"),
-      @ApiResponse(responseCode = "404", description = "No notification exists for that order",
-          content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-  })
+  @ApiResponse(responseCode = "200", description = "Notification found")
+  @ApiResponse(responseCode = "404", description = "No notification exists for that order",
+      content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
   @GetMapping("/{orderId}")
   public NotificationLogResponse getByOrderId(@PathVariable Long orderId) {
     return NotificationLogResponse.from(notificationService.findByOrderId(orderId));

@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -31,11 +30,9 @@ public class PaymentController {
 
   @Operation(summary = "Charge a payment",
       description = "Simulates processing a payment. Approves amounts up to 10000, rejects anything above.")
-  @ApiResponses({
-      @ApiResponse(responseCode = "201", description = "Payment processed (approved or rejected)"),
-      @ApiResponse(responseCode = "400", description = "Validation failure",
-          content = @Content(schema = @Schema(implementation = ValidationProblemDetail.class)))
-  })
+  @ApiResponse(responseCode = "201", description = "Payment processed (approved or rejected)")
+  @ApiResponse(responseCode = "400", description = "Validation failure",
+      content = @Content(schema = @Schema(implementation = ValidationProblemDetail.class)))
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public PaymentResponse charge(@Valid @RequestBody PaymentRequest request) {
@@ -44,11 +41,9 @@ public class PaymentController {
   }
 
   @Operation(summary = "Get a payment by order ID")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Payment found"),
-      @ApiResponse(responseCode = "404", description = "No payment exists for that order",
-          content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-  })
+  @ApiResponse(responseCode = "200", description = "Payment found")
+  @ApiResponse(responseCode = "404", description = "No payment exists for that order",
+      content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
   @GetMapping("/{orderId}")
   public PaymentResponse getByOrderId(@PathVariable Long orderId) {
     return PaymentResponse.from(paymentService.findByOrderId(orderId));
