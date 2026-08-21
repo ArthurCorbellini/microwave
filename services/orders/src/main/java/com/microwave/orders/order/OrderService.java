@@ -17,14 +17,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 
-// Intentionally NOT @Transactional in createOrder or handleInventoryReserved:
-// each method persists/updates the order first, then performs a side effect
-// (publishing OrderCreated, sending ReserveStock, calling payments) that can
-// fail independently. Wrapping either in a transaction would roll back what
-// was already recorded whenever that follow-up call fails — see
-// docs/decision-log/tech-debts.md TD-1, which documents this gap for the
-// payments-unreachable case (now living in handleInventoryReserved instead
-// of the original synchronous POST /orders flow).
+// Intentionally NOT @Transactional — persisting the order and the async
+// side effects (publish/send/charge) must not roll back together; see TD-1.
 @Service
 public class OrderService {
 
@@ -44,10 +38,8 @@ public class OrderService {
     this.reservationCommandPublisher = reservationCommandPublisher;
   }
 
-  // No longer calls payments synchronously — see handleInventoryReserved,
-  // invoked later by InventoryReservedListener (Task 17) once the async
-  // reservation step resolves. The client sees this order as CREATED
-  // immediately and discovers the final outcome via GET /orders/{id}.
+  // Returns immediately as CREATED — reservation/payment resolve async;
+  // the client discovers the outcome via GET /orders/{id}.
   public Order createOrder(Long productId, int quantity) {
     ProductResponse product = fetchProduct(productId);
     BigDecimal totalAmount = product.price().multiply(BigDecimal.valueOf(quantity));
@@ -65,8 +57,7 @@ public class OrderService {
   // no-op. @Version protects against a stale concurrent *write* — it does NOT
   // prevent a concurrent double-charge if two listener threads both read
   // CREATED before either saves; RabbitMQ's default listener concurrency of 1
-  // (Task 14's RabbitMQConfig) is what actually keeps that window closed in
-  // practice.
+  // (RabbitMQConfig) is what actually keeps that window closed in practice.
   public void handleInventoryReserved(InventoryReservedReply reply) {
     Order order = orderRepository.findById(reply.orderId())
         .orElseThrow(() -> new OrderNotFoundException(reply.orderId()));

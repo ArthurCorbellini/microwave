@@ -22,9 +22,9 @@ public class ReservationService {
 
   // Idempotent: a redelivered command for an orderId that's already reserved
   // returns the existing Reservation instead of decrementing Stock again.
-  // @Transactional so a failure saving the Reservation (e.g. Task 6's dead-letter
-  // test) rolls back the Stock decrement too — otherwise a retried delivery
-  // would decrement Stock again on every attempt before finally failing.
+  // @Transactional so a failure saving the Reservation rolls back the Stock
+  // decrement too — otherwise a retried delivery would decrement Stock again
+  // on every attempt before finally failing.
   @Transactional
   public Reservation reserve(Long orderId, Long productId, int quantity) {
     Optional<Reservation> existing = reservationRepository.findByOrderId(orderId);

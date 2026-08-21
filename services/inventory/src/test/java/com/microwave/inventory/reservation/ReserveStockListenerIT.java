@@ -53,11 +53,9 @@ class ReserveStockListenerIT {
 
   @BeforeEach
   void setupTestQueue() {
-    // Declare a simple queue for receiving replies
     Queue testQueue = new Queue(TEST_REPLY_QUEUE, true, false, true);
     rabbitAdmin.declareQueue(testQueue);
 
-    // Bind the test queue to the orders exchange
     Binding testBinding = BindingBuilder.bind(testQueue)
         .to(new DirectExchange(RabbitMQConfig.ORDERS_EXCHANGE))
         .with(RabbitMQConfig.INVENTORY_RESERVED_ROUTING_KEY);

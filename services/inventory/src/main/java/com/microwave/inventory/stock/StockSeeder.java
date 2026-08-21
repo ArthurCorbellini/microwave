@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 // Seeds a couple of demo products' stock for local docker-compose exploration
-// via Postman — only active under the "demo" profile (set by docker-compose.yml,
-// see Task 19), never during `mvn test`/`mvn verify` or a plain local run.
+// via Postman — only active under the "demo" profile (set by docker-compose.yml),
+// never during `mvn test`/`mvn verify` or a plain local run.
 // Product ids 1/2 are illustrative; create matching products in `catalog` first
 // (POST /products) for the demo to make sense end-to-end.
 @Component

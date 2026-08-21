@@ -191,9 +191,9 @@ class OrderServiceTest {
         .isInstanceOf(UpstreamServiceUnavailableException.class);
 
     // Order stays CREATED — not rolled back, not confirmed. TD-1 stays open
-    // through Phase 3 (see docs/decision-log/tech-debts.md), though the
-    // RabbitMQ retry wrapping this call (Task 14's RabbitMQConfig) does at
-    // least retry the payments call 3 times before giving up, unlike Phase 1.
+    // (see docs/decision-log/tech-debts.md), though the RabbitMQ retry
+    // wrapping this call does at least retry the payments call 3 times
+    // before giving up, unlike the original synchronous flow.
     assertThat(order.getStatus()).isEqualTo(OrderStatus.CREATED);
   }
 }
