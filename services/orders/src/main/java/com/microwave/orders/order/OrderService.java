@@ -89,9 +89,9 @@ public class OrderService {
       return;
     }
 
+    reservationCommandPublisher.sendReleaseStock(order.getId());
     order.updateStatus(OrderStatus.REJECTED);
     orderRepository.save(order);
-    reservationCommandPublisher.sendReleaseStock(order.getId());
   }
 
   private ProductResponse fetchProduct(Long productId) {
