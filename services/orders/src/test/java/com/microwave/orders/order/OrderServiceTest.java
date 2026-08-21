@@ -7,10 +7,8 @@ import com.microwave.orders.inventory.messaging.InventoryReservedReply;
 import com.microwave.orders.order.exceptions.OrderNotFoundException;
 import com.microwave.orders.order.exceptions.ProductNotFoundException;
 import com.microwave.orders.order.exceptions.UpstreamServiceUnavailableException;
-import com.microwave.orders.payments.PaymentStatus;
-import com.microwave.orders.payments.PaymentsClient;
-import com.microwave.orders.payments.rest.PaymentRequest;
-import com.microwave.orders.payments.rest.PaymentResponse;
+import com.microwave.orders.payments.PaymentCommandPublisher;
+import com.microwave.orders.payments.messaging.PaymentProcessedReply;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
@@ -31,6 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,13 +42,13 @@ class OrderServiceTest {
   private CatalogClient catalogClient;
 
   @Mock
-  private PaymentsClient paymentsClient;
-
-  @Mock
   private OrderEventPublisher orderEventPublisher;
 
   @Mock
   private ReservationCommandPublisher reservationCommandPublisher;
+
+  @Mock
+  private PaymentCommandPublisher paymentCommandPublisher;
 
   private OrderService orderService;
 
@@ -66,11 +65,11 @@ class OrderServiceTest {
 
   private void initService() {
     orderService = new OrderService(
-        orderRepository, catalogClient, paymentsClient, orderEventPublisher, reservationCommandPublisher);
+        orderRepository, catalogClient, orderEventPublisher, reservationCommandPublisher, paymentCommandPublisher);
   }
 
   @Test
-  void createsOrderAndPublishesEventAndCommandWithoutCallingPayments() {
+  void createsOrderAndPublishesEventAndCommandWithoutTouchingPayments() {
     initService();
     when(catalogClient.getProduct(1L))
         .thenReturn(new ProductResponse(1L, "Keyboard", "Mechanical keyboard", new BigDecimal("100.00")));
@@ -85,7 +84,7 @@ class OrderServiceTest {
     assertThat(order.getStatus()).isEqualTo(OrderStatus.CREATED);
     assertThat(order.getTotalAmount()).isEqualByComparingTo("200.00");
     verify(orderRepository, times(1)).save(any(Order.class));
-    verify(paymentsClient, never()).charge(any(PaymentRequest.class));
+    verifyNoInteractions(paymentCommandPublisher);
     verify(orderEventPublisher).publishOrderCreated(order);
     verify(reservationCommandPublisher).sendReserveStock(42L, 1L, 2);
   }
@@ -111,38 +110,22 @@ class OrderServiceTest {
   }
 
   @Test
-  void confirmsOrderWhenReservedAndPaymentApproved() {
+  void sendsChargePaymentWhenReserved() {
     initService();
     Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CREATED);
     ReflectionTestUtils.setField(order, "id", 42L);
     when(orderRepository.findById(42L)).thenReturn(Optional.of(order));
-    when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
-    when(paymentsClient.charge(any(PaymentRequest.class)))
-        .thenReturn(new PaymentResponse(1L, 42L, new BigDecimal("200.00"), PaymentStatus.APPROVED));
 
     orderService.handleInventoryReserved(new InventoryReservedReply(42L, true, null));
 
-    assertThat(order.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
-    verify(paymentsClient).charge(any(PaymentRequest.class));
+    verify(paymentCommandPublisher).sendChargePayment(42L, new BigDecimal("200.00"));
+    // Order stays CREATED — it only settles once handlePaymentProcessed runs.
+    assertThat(order.getStatus()).isEqualTo(OrderStatus.CREATED);
+    verify(orderRepository, never()).save(any(Order.class));
   }
 
   @Test
-  void rejectsOrderWhenReservedButPaymentDeclined() {
-    initService();
-    Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CREATED);
-    ReflectionTestUtils.setField(order, "id", 42L);
-    when(orderRepository.findById(42L)).thenReturn(Optional.of(order));
-    when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
-    when(paymentsClient.charge(any(PaymentRequest.class)))
-        .thenReturn(new PaymentResponse(1L, 42L, new BigDecimal("200.00"), PaymentStatus.REJECTED));
-
-    orderService.handleInventoryReserved(new InventoryReservedReply(42L, true, null));
-
-    assertThat(order.getStatus()).isEqualTo(OrderStatus.REJECTED);
-  }
-
-  @Test
-  void rejectsOrderWhenNotReservedWithoutCallingPayments() {
+  void rejectsOrderWhenNotReservedWithoutTouchingPayments() {
     initService();
     Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CREATED);
     ReflectionTestUtils.setField(order, "id", 42L);
@@ -152,11 +135,11 @@ class OrderServiceTest {
     orderService.handleInventoryReserved(new InventoryReservedReply(42L, false, "OUT_OF_STOCK"));
 
     assertThat(order.getStatus()).isEqualTo(OrderStatus.REJECTED);
-    verify(paymentsClient, never()).charge(any(PaymentRequest.class));
+    verifyNoInteractions(paymentCommandPublisher);
   }
 
   @Test
-  void ignoresAReplyForAnOrderThatAlreadyLeftCreated() {
+  void ignoresAnInventoryReplyForAnOrderThatAlreadyLeftCreated() {
     initService();
     Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CONFIRMED);
     ReflectionTestUtils.setField(order, "id", 42L);
@@ -164,12 +147,12 @@ class OrderServiceTest {
 
     orderService.handleInventoryReserved(new InventoryReservedReply(42L, true, null));
 
-    verify(paymentsClient, never()).charge(any(PaymentRequest.class));
+    verifyNoInteractions(paymentCommandPublisher);
     verify(orderRepository, never()).save(any(Order.class));
   }
 
   @Test
-  void throwsOrderNotFoundWhenReplyReferencesUnknownOrder() {
+  void throwsOrderNotFoundWhenInventoryReplyReferencesUnknownOrder() {
     initService();
     when(orderRepository.findById(99L)).thenReturn(Optional.empty());
     InventoryReservedReply reply = new InventoryReservedReply(99L, true, null);
@@ -179,21 +162,53 @@ class OrderServiceTest {
   }
 
   @Test
-  void throwsUpstreamUnavailableWhenPaymentsFailsDuringReservedHandling() {
+  void confirmsOrderWhenPaymentApproved() {
     initService();
     Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CREATED);
     ReflectionTestUtils.setField(order, "id", 42L);
     when(orderRepository.findById(42L)).thenReturn(Optional.of(order));
-    when(paymentsClient.charge(any(PaymentRequest.class))).thenThrow(feignErrorWithStatus(503));
-    InventoryReservedReply reply = new InventoryReservedReply(42L, true, null);
+    when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    assertThatThrownBy(() -> orderService.handleInventoryReserved(reply))
-        .isInstanceOf(UpstreamServiceUnavailableException.class);
+    orderService.handlePaymentProcessed(new PaymentProcessedReply(42L, true, null));
 
-    // Order stays CREATED — not rolled back, not confirmed. TD-1 stays open
-    // (see docs/decision-log/tech-debts.md), though the RabbitMQ retry
-    // wrapping this call does at least retry the payments call 3 times
-    // before giving up, unlike the original synchronous flow.
-    assertThat(order.getStatus()).isEqualTo(OrderStatus.CREATED);
+    assertThat(order.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
+    verifyNoInteractions(reservationCommandPublisher);
+  }
+
+  @Test
+  void rejectsOrderAndReleasesStockWhenPaymentDeclined() {
+    initService();
+    Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CREATED);
+    ReflectionTestUtils.setField(order, "id", 42L);
+    when(orderRepository.findById(42L)).thenReturn(Optional.of(order));
+    when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    orderService.handlePaymentProcessed(new PaymentProcessedReply(42L, false, "AMOUNT_EXCEEDS_LIMIT"));
+
+    assertThat(order.getStatus()).isEqualTo(OrderStatus.REJECTED);
+    verify(reservationCommandPublisher).sendReleaseStock(42L);
+  }
+
+  @Test
+  void ignoresAPaymentProcessedReplyForAnOrderThatAlreadyLeftCreated() {
+    initService();
+    Order order = new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.REJECTED);
+    ReflectionTestUtils.setField(order, "id", 42L);
+    when(orderRepository.findById(42L)).thenReturn(Optional.of(order));
+
+    orderService.handlePaymentProcessed(new PaymentProcessedReply(42L, true, null));
+
+    verify(orderRepository, never()).save(any(Order.class));
+    verifyNoInteractions(reservationCommandPublisher);
+  }
+
+  @Test
+  void throwsOrderNotFoundWhenPaymentProcessedReplyReferencesUnknownOrder() {
+    initService();
+    when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+    PaymentProcessedReply reply = new PaymentProcessedReply(99L, true, null);
+
+    assertThatThrownBy(() -> orderService.handlePaymentProcessed(reply))
+        .isInstanceOf(OrderNotFoundException.class);
   }
 }

@@ -27,10 +27,6 @@ catalog:
   service:
     url: http://localhost:8081
 
-payments:
-  service:
-    url: http://localhost:8082
-
 management:
   endpoints:
     web:
