@@ -1,6 +1,7 @@
 package com.microwave.orders.inventory;
 
 import com.microwave.orders.config.RabbitMQConfig;
+import com.microwave.orders.inventory.messaging.ReleaseStockCommand;
 import com.microwave.orders.inventory.messaging.ReserveStockCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ class ReservationCommandPublisherIT {
   static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:4-management-alpine");
 
   private static final String TEST_COMMAND_QUEUE = "test.inventory.reserve-stock.queue";
+  private static final String TEST_RELEASE_QUEUE = "test.inventory.release-stock.queue";
 
   @Autowired
   private ReservationCommandPublisher reservationCommandPublisher;
@@ -51,6 +53,13 @@ class ReservationCommandPublisherIT {
         .to(new DirectExchange(RabbitMQConfig.INVENTORY_EXCHANGE))
         .with(RabbitMQConfig.RESERVE_STOCK_ROUTING_KEY);
     rabbitAdmin.declareBinding(binding);
+
+    Queue releaseQueue = new Queue(TEST_RELEASE_QUEUE, true, false, true);
+    rabbitAdmin.declareQueue(releaseQueue);
+    Binding releaseBinding = BindingBuilder.bind(releaseQueue)
+        .to(new DirectExchange(RabbitMQConfig.INVENTORY_EXCHANGE))
+        .with(RabbitMQConfig.RELEASE_STOCK_ROUTING_KEY);
+    rabbitAdmin.declareBinding(releaseBinding);
   }
 
   @Test
@@ -64,5 +73,16 @@ class ReservationCommandPublisherIT {
     assertThat(received.orderId()).isEqualTo(42L);
     assertThat(received.productId()).isEqualTo(1L);
     assertThat(received.quantity()).isEqualTo(5);
+  }
+
+  @Test
+  void publishesReleaseStockCommand() {
+    reservationCommandPublisher.sendReleaseStock(77L);
+
+    ReleaseStockCommand received =
+        (ReleaseStockCommand) rabbitTemplate.receiveAndConvert(TEST_RELEASE_QUEUE, 10000);
+
+    assertThat(received).isNotNull();
+    assertThat(received.orderId()).isEqualTo(77L);
   }
 }
