@@ -90,9 +90,9 @@ class ReserveStockListenerResilienceIT {
   void deadLettersAMessageThatAlwaysFailsToProcess() {
     stockRepository.save(new Stock(4L, 50));
 
-    // orderId=null violates Reservation's not-null column constraint on save,
-    // which ReserveStockListener does NOT catch (only InsufficientStockException
-    // is caught) — so this is guaranteed to exhaust all 3 retries and dead-letter.
+    // A missing order id breaks Reservation's not-null column constraint when saving.
+    // The listener only handles insufficient-stock failures, so this kind of failure
+    // is guaranteed to exhaust all 3 retries and land on the dead-letter queue.
     rabbitTemplate.convertAndSend(
         RabbitMQConfig.INVENTORY_EXCHANGE, RabbitMQConfig.RESERVE_STOCK_ROUTING_KEY,
         new ReserveStockCommand(null, 4L, 5));

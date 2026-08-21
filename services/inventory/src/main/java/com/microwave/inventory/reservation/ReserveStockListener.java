@@ -25,7 +25,7 @@ public class ReserveStockListener {
     try {
       reservationService.reserve(command.orderId(), command.productId(), command.quantity());
       reply = InventoryReservedReply.reserved(command.orderId());
-    } catch (InsufficientStockException ex) {
+    } catch (InsufficientStockException _) {
       reply = InventoryReservedReply.notReserved(command.orderId(), "OUT_OF_STOCK");
     }
 
