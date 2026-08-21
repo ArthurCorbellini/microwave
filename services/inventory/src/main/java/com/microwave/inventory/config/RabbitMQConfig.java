@@ -22,8 +22,11 @@ public class RabbitMQConfig {
   public static final String INVENTORY_EXCHANGE = "inventory.exchange";
   public static final String RESERVE_STOCK_QUEUE = "inventory.reserve-stock.queue";
   public static final String RESERVE_STOCK_ROUTING_KEY = "reserve-stock";
+  public static final String RELEASE_STOCK_QUEUE = "inventory.release-stock.queue";
+  public static final String RELEASE_STOCK_ROUTING_KEY = "release-stock";
   public static final String INVENTORY_DLX = "inventory.dlx";
   public static final String RESERVE_STOCK_DLQ = "inventory.reserve-stock.dlq";
+  public static final String RELEASE_STOCK_DLQ = "inventory.release-stock.dlq";
 
   public static final String ORDERS_EXCHANGE = "orders.exchange";
   public static final String INVENTORY_RESERVED_ROUTING_KEY = "inventory-reserved";
@@ -70,6 +73,30 @@ public class RabbitMQConfig {
   }
 
   @Bean
+  Queue releaseStockQueue() {
+    return QueueBuilder.durable(RELEASE_STOCK_QUEUE)
+        .withArgument("x-dead-letter-exchange", INVENTORY_DLX)
+        .withArgument("x-dead-letter-routing-key", RELEASE_STOCK_ROUTING_KEY)
+        .build();
+  }
+
+  @Bean
+  Queue releaseStockDeadLetterQueue() {
+    return QueueBuilder.durable(RELEASE_STOCK_DLQ).build();
+  }
+
+  @Bean
+  Binding releaseStockBinding() {
+    return BindingBuilder.bind(releaseStockQueue()).to(inventoryExchange()).with(RELEASE_STOCK_ROUTING_KEY);
+  }
+
+  @Bean
+  Binding releaseStockDeadLetterBinding() {
+    return BindingBuilder.bind(releaseStockDeadLetterQueue()).to(inventoryDeadLetterExchange())
+        .with(RELEASE_STOCK_ROUTING_KEY);
+  }
+
+  @Bean
   MessageConverter jsonMessageConverter() {
     return new JacksonJsonMessageConverter("com.microwave.inventory.reservation.messaging");
   }
@@ -82,7 +109,7 @@ public class RabbitMQConfig {
   }
 
   @Bean
-  StatelessRetryOperationsInterceptor retryInterceptor(RabbitTemplate rabbitTemplate) {
+  StatelessRetryOperationsInterceptor reserveStockRetryInterceptor(RabbitTemplate rabbitTemplate) {
     return RetryInterceptorBuilder.stateless()
         .maxRetries(3)
         .backOffOptions(500, 2.0, 10_000)
@@ -91,13 +118,33 @@ public class RabbitMQConfig {
   }
 
   @Bean
-  SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+  SimpleRabbitListenerContainerFactory reserveStockListenerContainerFactory(
       ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter,
-      StatelessRetryOperationsInterceptor retryInterceptor) {
+      StatelessRetryOperationsInterceptor reserveStockRetryInterceptor) {
     SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
     factory.setConnectionFactory(connectionFactory);
     factory.setMessageConverter(jsonMessageConverter);
-    factory.setAdviceChain(retryInterceptor);
+    factory.setAdviceChain(reserveStockRetryInterceptor);
+    return factory;
+  }
+
+  @Bean
+  StatelessRetryOperationsInterceptor releaseStockRetryInterceptor(RabbitTemplate rabbitTemplate) {
+    return RetryInterceptorBuilder.stateless()
+        .maxRetries(3)
+        .backOffOptions(500, 2.0, 10_000)
+        .recoverer(new RepublishMessageRecoverer(rabbitTemplate, INVENTORY_DLX, RELEASE_STOCK_ROUTING_KEY))
+        .build();
+  }
+
+  @Bean
+  SimpleRabbitListenerContainerFactory releaseStockListenerContainerFactory(
+      ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter,
+      StatelessRetryOperationsInterceptor releaseStockRetryInterceptor) {
+    SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+    factory.setConnectionFactory(connectionFactory);
+    factory.setMessageConverter(jsonMessageConverter);
+    factory.setAdviceChain(releaseStockRetryInterceptor);
     return factory;
   }
 }
