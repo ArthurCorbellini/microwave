@@ -1,0 +1,31 @@
+package com.microwave.catalog.error;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class ValidationProblemDetailTest {
+
+  @Test
+  void instancesWithSameFieldsAreEqual() {
+    List<FieldErrorDetail> errors = List.of(new FieldErrorDetail("name", "must not be blank"));
+    ValidationProblemDetail first = new ValidationProblemDetail(HttpStatus.BAD_REQUEST, "Validation failed", errors);
+    ValidationProblemDetail second = new ValidationProblemDetail(HttpStatus.BAD_REQUEST, "Validation failed", errors);
+
+    assertThat(first).isEqualTo(second);
+    assertThat(first.hashCode()).isEqualTo(second.hashCode());
+  }
+
+  @Test
+  void instancesWithDifferentErrorsAreNotEqual() {
+    ValidationProblemDetail first = new ValidationProblemDetail(HttpStatus.BAD_REQUEST, "Validation failed",
+        List.of(new FieldErrorDetail("name", "must not be blank")));
+    ValidationProblemDetail second = new ValidationProblemDetail(HttpStatus.BAD_REQUEST, "Validation failed",
+        List.of(new FieldErrorDetail("price", "must be positive")));
+
+    assertThat(first).isNotEqualTo(second);
+  }
+}
