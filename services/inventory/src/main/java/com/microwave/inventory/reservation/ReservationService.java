@@ -47,4 +47,25 @@ public class ReservationService {
     return reservationRepository.findByOrderId(orderId)
         .orElseThrow(() -> new ReservationNotFoundException(orderId));
   }
+
+  // Idempotent: releasing an already-RELEASED reservation is a no-op, so a
+  // redelivered ReleaseStock command doesn't restore Stock twice.
+  // @Transactional so a failure saving the Reservation rolls back the Stock
+  // increase too.
+  @Transactional
+  public void release(Long orderId) {
+    Reservation reservation = reservationRepository.findByOrderId(orderId)
+        .orElseThrow(() -> new ReservationNotFoundException(orderId));
+
+    if (reservation.getStatus() == ReservationStatus.RELEASED) {
+      return;
+    }
+
+    Stock stock = stockRepository.findByProductId(reservation.getProductId()).orElseThrow();
+    stock.increase(reservation.getQuantity());
+    stockRepository.save(stock);
+
+    reservation.markReleased();
+    reservationRepository.save(reservation);
+  }
 }
