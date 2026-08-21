@@ -28,4 +28,14 @@ class ValidationProblemDetailTest {
 
     assertThat(first).isNotEqualTo(second);
   }
+
+  @Test
+  void equalsIsReflexiveAndRejectsNullAndDifferentType() {
+    ValidationProblemDetail detail = new ValidationProblemDetail(HttpStatus.BAD_REQUEST, "Validation failed",
+        List.of(new FieldErrorDetail("orderId", "must not be null")));
+
+    assertThat(detail.equals(detail)).isTrue();
+    assertThat(detail.equals(null)).isFalse();
+    assertThat(detail.equals("not a ValidationProblemDetail")).isFalse();
+  }
 }
