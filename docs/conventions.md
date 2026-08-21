@@ -69,6 +69,41 @@ Per the Phase 1 design (see [`docs/superpowers/specs/2026-07-31-phase1-foundatio
 - **Testcontainers** for integration tests against a real Postgres instance (wired via `@ServiceConnection`, not manual `@DynamicPropertySource` — see `49c0124`).
 - **WireMock** for Feign client contract tests, where a service calls another service synchronously (e.g. `orders` → `catalog`, `orders` → `payments`).
 
+## Static analysis
+
+Every service's `pom.xml` carries an identical `jacoco-maven-plugin` (`0.8.13`) block under `<build><plugins>`: a `prepare-agent` execution (no id, default goal) plus a `report` execution bound to the `verify` phase. Binding to `verify` rather than `test` matters — it's what makes the coverage report include both unit tests and the Testcontainers integration tests, since those only run during `verify`. New services should copy this block verbatim rather than reinventing it.
+
+```xml
+<plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.8.13</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>prepare-agent</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+                <goal>report</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+CI runs static analysis via a dedicated `sonar` job in `.github/workflows/ci.yml`, matrixed over the same `service: [catalog, orders, payments, inventory, notifications]` list as the `test` and `docker-build` jobs. Each matrix entry runs `mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar` with `-Dsonar.projectKey=ArthurCorbellini_microwave-<service>`, feeding the JaCoCo report above into SonarCloud's coverage metric. A new service needs **both** halves to actually get analyzed:
+
+1. An entry in the `sonar` job's `matrix.service` list (mirroring the `test`/`docker-build` matrices).
+2. A SonarCloud project created **manually** with key `ArthurCorbellini_microwave-<service>` — not via SonarCloud's automatic GitHub repo import, since this repo is a single GitHub repository hosting 5 independent Maven modules (a SonarCloud "monorepo"), not a 1:1 repo-to-project mapping. Automatic import would create/expect one project for the whole repo, not one per service.
+
+Missing either half leaves the new service silently at zero coverage and zero static analysis, with nothing in the repo flagging the gap.
+
+The `sonar` check is **advisory-only**: results surface on SonarCloud's dashboard and via its PR decoration comment, but `sonar` is deliberately excluded from `main`'s required status checks (verified via the GitHub branch protection API) — a red `sonar` result never blocks a merge.
+
 ## Containerization
 
 Each service has a multi-stage `Dockerfile` (`services/<service>/Dockerfile`): a `maven:3.9.16-eclipse-temurin-25` build stage running `mvn package -Dmaven.test.skip=true`, and an `eclipse-temurin:25-jre` runtime stage that installs `curl` (required by the `docker-compose` healthchecks below) before copying the built `.jar`. Tests never run inside the image build — that's already covered by CI (Phase 1.1) on every PR. Each service also has a `.dockerignore` (excludes `target/`) to keep the build context small.

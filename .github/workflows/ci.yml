@@ -51,3 +51,35 @@ jobs:
 
       - name: Build image
         run: docker build -t ${{ matrix.service }}:ci services/${{ matrix.service }}
+
+  sonar:
+    name: sonar (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [catalog, orders, payments, inventory, notifications]
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: services/${{ matrix.service }}/pom.xml
+
+      - name: Analyze with SonarCloud
+        working-directory: services/${{ matrix.service }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >
+          mvn -B verify
+          org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar
+          -Dsonar.organization=arthurcorbellini
+          -Dsonar.projectKey=ArthurCorbellini_microwave-${{ matrix.service }}
+          -Dsonar.host.url=https://sonarcloud.io
