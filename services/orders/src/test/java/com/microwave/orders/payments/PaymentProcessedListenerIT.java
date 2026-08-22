@@ -1,11 +1,11 @@
-package com.microwave.orders.inventory;
+package com.microwave.orders.payments;
 
 import com.microwave.orders.config.RabbitMQConfig;
-import com.microwave.orders.inventory.messaging.InventoryReservedReply;
+import com.microwave.orders.inventory.messaging.ReleaseStockCommand;
 import com.microwave.orders.order.Order;
 import com.microwave.orders.order.OrderRepository;
 import com.microwave.orders.order.OrderStatus;
-import com.microwave.orders.payments.messaging.ChargePaymentCommand;
+import com.microwave.orders.payments.messaging.PaymentProcessedReply;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Binding;
@@ -30,7 +30,7 @@ import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @Testcontainers
-class InventoryReservedListenerIT {
+class PaymentProcessedListenerIT {
 
   @Container
   @ServiceConnection
@@ -40,7 +40,7 @@ class InventoryReservedListenerIT {
   @ServiceConnection
   static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:4-management-alpine");
 
-  private static final String TEST_CHARGE_PAYMENT_QUEUE = "test.payments.charge-payment.queue";
+  private static final String TEST_RELEASE_STOCK_QUEUE = "test.inventory.release-stock.queue";
 
   @Autowired
   private RabbitTemplate rabbitTemplate;
@@ -52,48 +52,45 @@ class InventoryReservedListenerIT {
   private OrderRepository orderRepository;
 
   @BeforeEach
-  void bindTestChargePaymentQueue() {
-    Queue queue = new Queue(TEST_CHARGE_PAYMENT_QUEUE, true, false, true);
+  void bindTestReleaseStockQueue() {
+    Queue queue = new Queue(TEST_RELEASE_STOCK_QUEUE, true, false, true);
     rabbitAdmin.declareQueue(queue);
     Binding binding = BindingBuilder.bind(queue)
-        .to(new DirectExchange(RabbitMQConfig.PAYMENTS_EXCHANGE))
-        .with(RabbitMQConfig.CHARGE_PAYMENT_ROUTING_KEY);
+        .to(new DirectExchange(RabbitMQConfig.INVENTORY_EXCHANGE))
+        .with(RabbitMQConfig.RELEASE_STOCK_ROUTING_KEY);
     rabbitAdmin.declareBinding(binding);
   }
 
   @Test
-  void sendsChargePaymentWhenReserved() {
+  void confirmsOrderWhenApproved() {
     Order order = orderRepository.save(new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CREATED));
 
     rabbitTemplate.convertAndSend(
-        RabbitMQConfig.ORDERS_EXCHANGE, RabbitMQConfig.INVENTORY_RESERVED_ROUTING_KEY,
-        new InventoryReservedReply(order.getId(), true, null));
+        RabbitMQConfig.ORDERS_EXCHANGE, RabbitMQConfig.PAYMENT_PROCESSED_ROUTING_KEY,
+        new PaymentProcessedReply(order.getId(), true, null));
 
-    ChargePaymentCommand command =
-        (ChargePaymentCommand) rabbitTemplate.receiveAndConvert(TEST_CHARGE_PAYMENT_QUEUE, 10000);
-    assertThat(command).isNotNull();
-    assertThat(command.orderId()).isEqualTo(order.getId());
-    assertThat(command.amount()).isEqualByComparingTo("200.00");
-
-    Order reloaded = orderRepository.findById(order.getId()).orElseThrow();
-    assertThat(reloaded.getStatus()).isEqualTo(OrderStatus.CREATED);
+    await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+      Order reloaded = orderRepository.findById(order.getId()).orElseThrow();
+      assertThat(reloaded.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
+    });
   }
 
   @Test
-  void rejectsOrderWhenNotReservedWithoutTouchingPayments() {
+  void rejectsOrderAndReleasesStockWhenDeclined() {
     Order order = orderRepository.save(new Order(1L, 2, new BigDecimal("200.00"), OrderStatus.CREATED));
 
     rabbitTemplate.convertAndSend(
-        RabbitMQConfig.ORDERS_EXCHANGE, RabbitMQConfig.INVENTORY_RESERVED_ROUTING_KEY,
-        new InventoryReservedReply(order.getId(), false, "OUT_OF_STOCK"));
+        RabbitMQConfig.ORDERS_EXCHANGE, RabbitMQConfig.PAYMENT_PROCESSED_ROUTING_KEY,
+        new PaymentProcessedReply(order.getId(), false, "AMOUNT_EXCEEDS_LIMIT"));
 
     await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
       Order reloaded = orderRepository.findById(order.getId()).orElseThrow();
       assertThat(reloaded.getStatus()).isEqualTo(OrderStatus.REJECTED);
     });
 
-    ChargePaymentCommand command =
-        (ChargePaymentCommand) rabbitTemplate.receiveAndConvert(TEST_CHARGE_PAYMENT_QUEUE, 2000);
-    assertThat(command).isNull();
+    ReleaseStockCommand command =
+        (ReleaseStockCommand) rabbitTemplate.receiveAndConvert(TEST_RELEASE_STOCK_QUEUE, 10000);
+    assertThat(command).isNotNull();
+    assertThat(command.orderId()).isEqualTo(order.getId());
   }
 }

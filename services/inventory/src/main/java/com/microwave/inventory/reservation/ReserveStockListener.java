@@ -19,7 +19,7 @@ public class ReserveStockListener {
     this.rabbitTemplate = rabbitTemplate;
   }
 
-  @RabbitListener(queues = RabbitMQConfig.RESERVE_STOCK_QUEUE, containerFactory = "rabbitListenerContainerFactory")
+  @RabbitListener(queues = RabbitMQConfig.RESERVE_STOCK_QUEUE, containerFactory = "reserveStockListenerContainerFactory")
   public void handle(ReserveStockCommand command) {
     InventoryReservedReply reply;
     try {

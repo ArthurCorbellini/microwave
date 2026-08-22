@@ -1,8 +1,7 @@
-package com.microwave.orders.inventory;
+package com.microwave.orders.payments;
 
 import com.microwave.orders.config.RabbitMQConfig;
-import com.microwave.orders.inventory.messaging.ReleaseStockCommand;
-import com.microwave.orders.inventory.messaging.ReserveStockCommand;
+import com.microwave.orders.payments.messaging.ChargePaymentCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Binding;
@@ -19,11 +18,13 @@ import org.testcontainers.rabbitmq.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.math.BigDecimal;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Testcontainers
-class ReservationCommandPublisherIT {
+class PaymentCommandPublisherIT {
 
   @Container
   @ServiceConnection
@@ -33,11 +34,10 @@ class ReservationCommandPublisherIT {
   @ServiceConnection
   static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:4-management-alpine");
 
-  private static final String TEST_COMMAND_QUEUE = "test.inventory.reserve-stock.queue";
-  private static final String TEST_RELEASE_QUEUE = "test.inventory.release-stock.queue";
+  private static final String TEST_COMMAND_QUEUE = "test.payments.charge-payment.queue";
 
   @Autowired
-  private ReservationCommandPublisher reservationCommandPublisher;
+  private PaymentCommandPublisher paymentCommandPublisher;
 
   @Autowired
   private RabbitTemplate rabbitTemplate;
@@ -50,39 +50,20 @@ class ReservationCommandPublisherIT {
     Queue queue = new Queue(TEST_COMMAND_QUEUE, true, false, true);
     rabbitAdmin.declareQueue(queue);
     Binding binding = BindingBuilder.bind(queue)
-        .to(new DirectExchange(RabbitMQConfig.INVENTORY_EXCHANGE))
-        .with(RabbitMQConfig.RESERVE_STOCK_ROUTING_KEY);
+        .to(new DirectExchange(RabbitMQConfig.PAYMENTS_EXCHANGE))
+        .with(RabbitMQConfig.CHARGE_PAYMENT_ROUTING_KEY);
     rabbitAdmin.declareBinding(binding);
-
-    Queue releaseQueue = new Queue(TEST_RELEASE_QUEUE, true, false, true);
-    rabbitAdmin.declareQueue(releaseQueue);
-    Binding releaseBinding = BindingBuilder.bind(releaseQueue)
-        .to(new DirectExchange(RabbitMQConfig.INVENTORY_EXCHANGE))
-        .with(RabbitMQConfig.RELEASE_STOCK_ROUTING_KEY);
-    rabbitAdmin.declareBinding(releaseBinding);
   }
 
   @Test
-  void publishesReserveStockCommand() {
-    reservationCommandPublisher.sendReserveStock(42L, 1L, 5);
+  void publishesChargePaymentCommand() {
+    paymentCommandPublisher.sendChargePayment(42L, new BigDecimal("150.00"));
 
-    ReserveStockCommand received =
-        (ReserveStockCommand) rabbitTemplate.receiveAndConvert(TEST_COMMAND_QUEUE, 10000);
+    ChargePaymentCommand received =
+        (ChargePaymentCommand) rabbitTemplate.receiveAndConvert(TEST_COMMAND_QUEUE, 10000);
 
     assertThat(received).isNotNull();
     assertThat(received.orderId()).isEqualTo(42L);
-    assertThat(received.productId()).isEqualTo(1L);
-    assertThat(received.quantity()).isEqualTo(5);
-  }
-
-  @Test
-  void publishesReleaseStockCommand() {
-    reservationCommandPublisher.sendReleaseStock(77L);
-
-    ReleaseStockCommand received =
-        (ReleaseStockCommand) rabbitTemplate.receiveAndConvert(TEST_RELEASE_QUEUE, 10000);
-
-    assertThat(received).isNotNull();
-    assertThat(received.orderId()).isEqualTo(77L);
+    assertThat(received.amount()).isEqualByComparingTo("150.00");
   }
 }

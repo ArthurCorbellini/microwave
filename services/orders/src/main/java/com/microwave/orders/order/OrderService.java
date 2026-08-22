@@ -7,10 +7,8 @@ import com.microwave.orders.inventory.messaging.InventoryReservedReply;
 import com.microwave.orders.order.exceptions.OrderNotFoundException;
 import com.microwave.orders.order.exceptions.ProductNotFoundException;
 import com.microwave.orders.order.exceptions.UpstreamServiceUnavailableException;
-import com.microwave.orders.payments.PaymentStatus;
-import com.microwave.orders.payments.PaymentsClient;
-import com.microwave.orders.payments.rest.PaymentRequest;
-import com.microwave.orders.payments.rest.PaymentResponse;
+import com.microwave.orders.payments.PaymentCommandPublisher;
+import com.microwave.orders.payments.messaging.PaymentProcessedReply;
 import feign.FeignException;
 import org.springframework.stereotype.Service;
 
@@ -18,24 +16,25 @@ import java.math.BigDecimal;
 import java.util.List;
 
 // Intentionally NOT @Transactional — persisting the order and the async
-// side effects (publish/send/charge) must not roll back together; see TD-1.
+// side effects (publish/send) must not roll back together; see TD-1.
 @Service
 public class OrderService {
 
   private final OrderRepository orderRepository;
   private final CatalogClient catalogClient;
-  private final PaymentsClient paymentsClient;
   private final OrderEventPublisher orderEventPublisher;
   private final ReservationCommandPublisher reservationCommandPublisher;
+  private final PaymentCommandPublisher paymentCommandPublisher;
 
   public OrderService(
-      OrderRepository orderRepository, CatalogClient catalogClient, PaymentsClient paymentsClient,
-      OrderEventPublisher orderEventPublisher, ReservationCommandPublisher reservationCommandPublisher) {
+      OrderRepository orderRepository, CatalogClient catalogClient,
+      OrderEventPublisher orderEventPublisher, ReservationCommandPublisher reservationCommandPublisher,
+      PaymentCommandPublisher paymentCommandPublisher) {
     this.orderRepository = orderRepository;
     this.catalogClient = catalogClient;
-    this.paymentsClient = paymentsClient;
     this.orderEventPublisher = orderEventPublisher;
     this.reservationCommandPublisher = reservationCommandPublisher;
+    this.paymentCommandPublisher = paymentCommandPublisher;
   }
 
   // Returns immediately as CREATED — reservation/payment resolve async;
@@ -54,10 +53,7 @@ public class OrderService {
 
   // Called by InventoryReservedListener. The CREATED check makes a sequential
   // redelivery (arriving after the first one already settled the order) a
-  // no-op. @Version protects against a stale concurrent *write* — it does NOT
-  // prevent a concurrent double-charge if two listener threads both read
-  // CREATED before either saves; RabbitMQ's default listener concurrency of 1
-  // (RabbitMQConfig) is what actually keeps that window closed in practice.
+  // no-op.
   public void handleInventoryReserved(InventoryReservedReply reply) {
     Order order = orderRepository.findById(reply.orderId())
         .orElseThrow(() -> new OrderNotFoundException(reply.orderId()));
@@ -72,8 +68,29 @@ public class OrderService {
       return;
     }
 
-    PaymentResponse payment = requestPayment(order);
-    order.updateStatus(payment.status() == PaymentStatus.APPROVED ? OrderStatus.CONFIRMED : OrderStatus.REJECTED);
+    paymentCommandPublisher.sendChargePayment(order.getId(), order.getTotalAmount());
+  }
+
+  // Called by PaymentProcessedListener. Same CREATED guard as above — Order
+  // stays CREATED for the whole window between the inventory reply and this
+  // one, so the guard is valid for both reply handlers without a dedicated
+  // intermediate status (see the Phase 4 design spec's "Order status model").
+  public void handlePaymentProcessed(PaymentProcessedReply reply) {
+    Order order = orderRepository.findById(reply.orderId())
+        .orElseThrow(() -> new OrderNotFoundException(reply.orderId()));
+
+    if (order.getStatus() != OrderStatus.CREATED) {
+      return;
+    }
+
+    if (reply.approved()) {
+      order.updateStatus(OrderStatus.CONFIRMED);
+      orderRepository.save(order);
+      return;
+    }
+
+    reservationCommandPublisher.sendReleaseStock(order.getId());
+    order.updateStatus(OrderStatus.REJECTED);
     orderRepository.save(order);
   }
 
@@ -85,14 +102,6 @@ public class OrderService {
         throw new ProductNotFoundException(productId);
       }
       throw new UpstreamServiceUnavailableException("catalog", ex);
-    }
-  }
-
-  private PaymentResponse requestPayment(Order order) {
-    try {
-      return paymentsClient.charge(new PaymentRequest(order.getId(), order.getTotalAmount()));
-    } catch (FeignException ex) {
-      throw new UpstreamServiceUnavailableException("payments", ex);
     }
   }
 

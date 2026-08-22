@@ -4,7 +4,7 @@ Living description of the system's macro topology — how services, brokers, and
 
 Update the "Current architecture" section each time a phase lands, the same way [`docs/conventions.md`](conventions.md) is kept current — don't wait until the whole roadmap is finished.
 
-## Current architecture (as of Phase 3)
+## Current architecture (as of Phase 4)
 
 ```mermaid
 flowchart LR
@@ -26,7 +26,7 @@ flowchart LR
     Client -->|REST| Inventory
     Client -->|REST| Notifications
     Orders -->|REST, sync| Catalog
-    Orders -->|REST, sync| Payments
+    Orders -->|"RabbitMQ command/reply"| Payments
     Orders -->|"RabbitMQ command/reply"| Inventory
     Orders -->|"Kafka event"| Kafka
     Kafka --> Notifications
@@ -38,7 +38,8 @@ flowchart LR
     Notifications --- NotificationsDB[(notifications_db)]
 ```
 
-- `orders` → `payments` and `orders` → `catalog` are still synchronous REST, unchanged since Phase 1.
+- `orders` → `catalog` is still synchronous REST, unchanged since Phase 1.
+- `orders` → `payments` is a RabbitMQ command/reply (`ChargePayment`/`PaymentProcessed`), same pattern as `orders` → `inventory` since Phase 3. `orders` also sends a fire-and-forget `ReleaseStock` command to `inventory` when a payment is declined after a successful reservation.
 - `orders` → `inventory` is a RabbitMQ command/reply (`ReserveStock`/`InventoryReserved`) — no direct REST call between them.
 - `orders` publishes `OrderCreated` to Kafka; `notifications` consumes it independently, decoupled from `orders`.
 - Every service is still reachable directly — ports are published to the host (see [`TD-3`](decision-log/tech-debts.md), still open).
@@ -85,7 +86,7 @@ flowchart LR
 Each new edge above is introduced by a specific phase — none of this exists yet:
 
 - **Orders → Inventory (RabbitMQ command/reply), Orders → Kafka → Notifications**: Phase 3.
-- **Orders → Payments (RabbitMQ command/reply, replacing the REST call)**: Phase 4. Exact Kafka event names/schemas (e.g. an order-confirmed or payment-outcome event) are Phase 3/4 design-spec detail, not fixed by this document.
+- **Orders → Payments (RabbitMQ command/reply, replacing the REST call)**: Phase 4, complete.
 - **Gateway, routing only**: Phase 6. At this point the Gateway *also* still proxies directly to each service alongside the BFF — that intermediate state isn't drawn here; see Phase 6's own description in `docs/roadmap.md`.
 - **BFF, and the Gateway restricted to routing only to the BFF**: Phase 8. This is what finally makes the diagram above accurate — before Phase 8, the Gateway's routes to `Catalog`/`Orders`/`Payments`/`Inventory` still exist directly, not just through the BFF.
 - `orders` → `catalog` stays synchronous REST throughout every phase — it was never part of the messaging migration.
