@@ -46,5 +46,3 @@ sequenceDiagram
 - `orders` → `catalog` is the only synchronous hop, and it happens *before* the order even exists — the client's `201` doesn't wait on anything after that.
 - Both RabbitMQ replies (`InventoryReserved`, `PaymentProcessed`) are guarded by the same rule: only act if the order is still `CREATED` (`Order.isSettled()`). Order stays `CREATED` for the entire window between the two replies, so one guard protects both handlers without needing a dedicated intermediate status.
 - `ReleaseStock` is fire-and-forget — `inventory` never replies to it, and `orders` doesn't wait for it before persisting `REJECTED`.
-
-Implemented via **choreography**, not orchestration — see `docs/concepts/sagas.md` (once it exists) for what that distinction means and why.
