@@ -97,6 +97,17 @@ Phase 4 added two more unguarded publish call sites (`ChargePayment`, `ReleaseSt
 
 **Planned resolution:** revisit alongside Phase 7 (Observability and resilience), which already covers circuit breakers and is the natural place to add publish-failure handling/retry for both cases.
 
+### TD-10 — No safety net if a future `@RabbitListener` omits `containerFactory`
+
+**Introduced in:** Phase 4
+**Where:** `orders`' and `inventory`'s `RabbitMQConfig` (per-queue retry interceptor split), any future `@RabbitListener`
+
+Phase 4 split `orders`' and `inventory`'s single shared retry interceptor/listener-container-factory into one pair per queue (fixing a routing-key misrouting bug this phase found — see `docs/conventions.md`'s "Per-queue retry interceptor" bullet). A side effect: neither service has a bean named `rabbitListenerContainerFactory` anymore. Before this split, that name happened to be both the explicit bean name and Spring Boot's default auto-configured fallback name, so a listener that forgot to set `containerFactory=` would coincidentally still bind to the correct (retry-configured) factory. Now that the explicit beans are named after their queue instead, a future `@RabbitListener` that omits `containerFactory=` silently binds to Spring Boot's own auto-configured default factory instead — which has no retry interceptor and no dead-letter behavior, so a message that fails processing loops forever (`defaultRequeueRejected` defaults to `true`) instead of being retried and dead-lettered. Nothing catches this at compile time or startup; only the `docs/conventions.md` rule (developer discipline) guards against it today.
+
+**Why it exists:** the per-queue split fixed a real, active bug (Tasks 7/11 of the Phase 4 plan); documenting the naming convention was the immediate fix, but an automated safety net (e.g. a startup check asserting every listener container has retry advice attached) is more involved and wasn't in this phase's scope.
+
+**Planned resolution:** revisit alongside Phase 7 (Observability and resilience), which already covers this kind of infrastructure-correctness tooling — add a startup-time check (e.g. an `ApplicationListener<ContextRefreshedEvent>` inspecting each `SimpleMessageListenerContainer`'s advice chain) that fails fast if any RabbitMQ listener container is missing retry/dead-letter configuration.
+
 ## Resolved
 
 ### TD-5 — No automated validation of Dockerfiles or `docker-compose.yml`
