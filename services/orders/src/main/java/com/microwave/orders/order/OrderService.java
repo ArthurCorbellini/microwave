@@ -51,14 +51,12 @@ public class OrderService {
     return order;
   }
 
-  // Called by InventoryReservedListener. The CREATED check makes a sequential
-  // redelivery (arriving after the first one already settled the order) a
-  // no-op.
+  // Called by InventoryReservedListener.
   public void handleInventoryReserved(InventoryReservedReply reply) {
     Order order = orderRepository.findById(reply.orderId())
         .orElseThrow(() -> new OrderNotFoundException(reply.orderId()));
 
-    if (order.getStatus() != OrderStatus.CREATED) {
+    if (order.isSettled()) {
       return;
     }
 
@@ -71,15 +69,12 @@ public class OrderService {
     paymentCommandPublisher.sendChargePayment(order.getId(), order.getTotalAmount());
   }
 
-  // Called by PaymentProcessedListener. Same CREATED guard as above — Order
-  // stays CREATED for the whole window between the inventory reply and this
-  // one, so the guard is valid for both reply handlers without a dedicated
-  // intermediate status (see the Phase 4 design spec's "Order status model").
+  // Called by PaymentProcessedListener.
   public void handlePaymentProcessed(PaymentProcessedReply reply) {
     Order order = orderRepository.findById(reply.orderId())
         .orElseThrow(() -> new OrderNotFoundException(reply.orderId()));
 
-    if (order.getStatus() != OrderStatus.CREATED) {
+    if (order.isSettled()) {
       return;
     }
 
