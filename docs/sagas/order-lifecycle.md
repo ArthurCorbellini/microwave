@@ -47,8 +47,4 @@ sequenceDiagram
 - Both RabbitMQ replies (`InventoryReserved`, `PaymentProcessed`) are guarded by the same rule: only act if the order is still `CREATED` (`Order.isSettled()`). Order stays `CREATED` for the entire window between the two replies, so one guard protects both handlers without needing a dedicated intermediate status.
 - `ReleaseStock` is fire-and-forget — `inventory` never replies to it, and `orders` doesn't wait for it before persisting `REJECTED`.
 
-## Why this is a saga
-
-A **saga** is a sequence of local transactions, each owned by a different service, with a compensating action that undoes an already-completed step if a later one fails — used instead of one distributed ACID transaction. Here: `orders` creates the order, `inventory` reserves stock, `payments` charges; if charging is declined, `ReleaseStock` compensates the reservation. `orders`' own step has no compensation of its own — the `Order` row is never deleted, it just receives its terminal status (`REJECTED`), acting as the saga's anchor/record.
-
-This project implements sagas via **choreography**, not orchestration: each service reacts to the previous step's reply and decides its own next step, with no central coordinator — see `docs/roadmap.md`'s Phase 4 entry, which frames this as "saga compensation," not a two-phase commit.
+Implemented via **choreography**, not orchestration — see `docs/concepts/sagas.md` (once it exists) for what that distinction means and why.
