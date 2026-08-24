@@ -7,6 +7,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.rabbitmq.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -22,6 +23,10 @@ class ActuatorHealthIT {
   @Container
   @ServiceConnection
   static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+
+  @Container
+  @ServiceConnection
+  static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:4-management-alpine");
 
   @Autowired
   private MockMvc mockMvc;

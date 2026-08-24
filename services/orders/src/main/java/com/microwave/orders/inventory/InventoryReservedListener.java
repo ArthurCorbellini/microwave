@@ -15,7 +15,7 @@ public class InventoryReservedListener {
     this.orderService = orderService;
   }
 
-  @RabbitListener(queues = RabbitMQConfig.INVENTORY_RESERVED_QUEUE, containerFactory = "rabbitListenerContainerFactory")
+  @RabbitListener(queues = RabbitMQConfig.INVENTORY_RESERVED_QUEUE, containerFactory = "inventoryReplyListenerContainerFactory")
   public void handle(InventoryReservedReply reply) {
     orderService.handleInventoryReserved(reply);
   }

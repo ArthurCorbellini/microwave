@@ -102,4 +102,44 @@ class ReservationServiceTest {
     assertThatThrownBy(() -> reservationService.findByOrderId(99L))
         .isInstanceOf(ReservationNotFoundException.class);
   }
+
+  @Test
+  void releasesAReservedReservationAndRestoresStock() {
+    initService();
+    Reservation reservation = new Reservation(42L, 1L, 5, ReservationStatus.RESERVED);
+    when(reservationRepository.findByOrderId(42L)).thenReturn(Optional.of(reservation));
+    when(stockRepository.findByProductId(1L)).thenReturn(Optional.of(new Stock(1L, 45)));
+
+    reservationService.release(42L);
+
+    ArgumentCaptor<Stock> stockCaptor = ArgumentCaptor.forClass(Stock.class);
+    verify(stockRepository).save(stockCaptor.capture());
+    assertThat(stockCaptor.getValue().getAvailableQuantity()).isEqualTo(50);
+
+    ArgumentCaptor<Reservation> reservationCaptor = ArgumentCaptor.forClass(Reservation.class);
+    verify(reservationRepository).save(reservationCaptor.capture());
+    assertThat(reservationCaptor.getValue().getStatus()).isEqualTo(ReservationStatus.RELEASED);
+  }
+
+  @Test
+  void isIdempotentForAnAlreadyReleasedReservation() {
+    initService();
+    Reservation reservation = new Reservation(42L, 1L, 5, ReservationStatus.RELEASED);
+    when(reservationRepository.findByOrderId(42L)).thenReturn(Optional.of(reservation));
+
+    reservationService.release(42L);
+
+    verify(stockRepository, never()).findByProductId(any());
+    verify(stockRepository, never()).save(any(Stock.class));
+    verify(reservationRepository, never()).save(any(Reservation.class));
+  }
+
+  @Test
+  void throwsReservationNotFoundWhenReleasingUnknownOrder() {
+    initService();
+    when(reservationRepository.findByOrderId(99L)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> reservationService.release(99L))
+        .isInstanceOf(ReservationNotFoundException.class);
+  }
 }

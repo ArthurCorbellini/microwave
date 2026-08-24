@@ -38,6 +38,10 @@ public class Stock {
     this.availableQuantity -= quantity;
   }
 
+  public void increase(int quantity) {
+    this.availableQuantity += quantity;
+  }
+
   public Long getId() {
     return id;
   }

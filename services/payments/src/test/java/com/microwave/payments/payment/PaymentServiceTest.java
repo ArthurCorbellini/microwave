@@ -12,6 +12,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +32,7 @@ class PaymentServiceTest {
   @Test
   void approvesAndSavesPaymentWithinLimit() {
     initService();
+    when(paymentRepository.findByOrderId(anyLong())).thenReturn(Optional.empty());
     when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     Payment result = paymentService.charge(1L, new BigDecimal("100.00"));
@@ -46,11 +49,24 @@ class PaymentServiceTest {
   @Test
   void rejectsAndSavesPaymentAboveLimit() {
     initService();
+    when(paymentRepository.findByOrderId(anyLong())).thenReturn(Optional.empty());
     when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     Payment result = paymentService.charge(2L, new BigDecimal("15000.00"));
 
     assertThat(result.getStatus()).isEqualTo(PaymentStatus.REJECTED);
+  }
+
+  @Test
+  void isIdempotentForARedeliveredOrderId() {
+    initService();
+    Payment existing = new Payment(1L, new BigDecimal("100.00"), PaymentStatus.APPROVED);
+    when(paymentRepository.findByOrderId(1L)).thenReturn(Optional.of(existing));
+
+    Payment result = paymentService.charge(1L, new BigDecimal("100.00"));
+
+    assertThat(result).isSameAs(existing);
+    verify(paymentRepository, never()).save(any(Payment.class));
   }
 
   @Test

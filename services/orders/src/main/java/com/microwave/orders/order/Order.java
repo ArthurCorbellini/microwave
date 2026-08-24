@@ -50,6 +50,15 @@ public class Order {
     this.status = status;
   }
 
+  // Only CREATED orders are still awaiting a reply from inventory/payments;
+  // CONFIRMED/REJECTED are terminal. Order stays CREATED for the whole async
+  // window between the two replies, so this same predicate protects every
+  // reply handler in OrderService from reprocessing a redelivered message,
+  // without needing a dedicated intermediate status.
+  public boolean isSettled() {
+    return this.status != OrderStatus.CREATED;
+  }
+
   public Long getId() {
     return id;
   }

@@ -47,6 +47,10 @@ public class Reservation {
     this.createdAt = Instant.now();
   }
 
+  public void markReleased() {
+    this.status = ReservationStatus.RELEASED;
+  }
+
   public Long getId() {
     return id;
   }

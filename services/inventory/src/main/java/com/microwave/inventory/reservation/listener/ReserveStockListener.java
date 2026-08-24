@@ -1,6 +1,7 @@
-package com.microwave.inventory.reservation;
+package com.microwave.inventory.reservation.listener;
 
 import com.microwave.inventory.config.RabbitMQConfig;
+import com.microwave.inventory.reservation.ReservationService;
 import com.microwave.inventory.reservation.exceptions.InsufficientStockException;
 import com.microwave.inventory.reservation.messaging.InventoryReservedReply;
 import com.microwave.inventory.reservation.messaging.ReserveStockCommand;
@@ -19,7 +20,7 @@ public class ReserveStockListener {
     this.rabbitTemplate = rabbitTemplate;
   }
 
-  @RabbitListener(queues = RabbitMQConfig.RESERVE_STOCK_QUEUE, containerFactory = "rabbitListenerContainerFactory")
+  @RabbitListener(queues = RabbitMQConfig.RESERVE_STOCK_QUEUE, containerFactory = "reserveStockListenerContainerFactory")
   public void handle(ReserveStockCommand command) {
     InventoryReservedReply reply;
     try {
