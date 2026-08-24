@@ -1,6 +1,7 @@
-package com.microwave.inventory.reservation;
+package com.microwave.inventory.reservation.listener;
 
 import com.microwave.inventory.config.RabbitMQConfig;
+import com.microwave.inventory.reservation.ReservationService;
 import com.microwave.inventory.reservation.exceptions.InsufficientStockException;
 import com.microwave.inventory.reservation.messaging.InventoryReservedReply;
 import com.microwave.inventory.reservation.messaging.ReserveStockCommand;
