@@ -1,4 +1,4 @@
-package com.microwave.orders.inventory.messaging;
+package com.microwave.orders.inventory.dto;
 
 public record ReleaseStockCommand(Long orderId) {
 }

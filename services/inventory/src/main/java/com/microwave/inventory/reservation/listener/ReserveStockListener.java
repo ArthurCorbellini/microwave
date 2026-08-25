@@ -2,9 +2,9 @@ package com.microwave.inventory.reservation.listener;
 
 import com.microwave.inventory.config.RabbitMQConfig;
 import com.microwave.inventory.reservation.ReservationService;
+import com.microwave.inventory.reservation.dto.InventoryReservedReply;
+import com.microwave.inventory.reservation.dto.ReserveStockCommand;
 import com.microwave.inventory.reservation.exceptions.InsufficientStockException;
-import com.microwave.inventory.reservation.messaging.InventoryReservedReply;
-import com.microwave.inventory.reservation.messaging.ReserveStockCommand;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;

@@ -2,7 +2,7 @@ package com.microwave.orders.payments;
 
 import com.microwave.orders.config.RabbitMQConfig;
 import com.microwave.orders.order.OrderService;
-import com.microwave.orders.payments.messaging.PaymentProcessedReply;
+import com.microwave.orders.payments.dto.PaymentProcessedReply;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 

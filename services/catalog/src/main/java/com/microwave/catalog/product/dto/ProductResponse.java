@@ -1,4 +1,4 @@
-package com.microwave.catalog.product.rest;
+package com.microwave.catalog.product.dto;
 
 import com.microwave.catalog.product.Product;
 

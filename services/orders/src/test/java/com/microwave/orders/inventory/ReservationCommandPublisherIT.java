@@ -1,8 +1,8 @@
 package com.microwave.orders.inventory;
 
 import com.microwave.orders.config.RabbitMQConfig;
-import com.microwave.orders.inventory.messaging.ReleaseStockCommand;
-import com.microwave.orders.inventory.messaging.ReserveStockCommand;
+import com.microwave.orders.inventory.dto.ReleaseStockCommand;
+import com.microwave.orders.inventory.dto.ReserveStockCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Binding;
@@ -14,10 +14,10 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.rabbitmq.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

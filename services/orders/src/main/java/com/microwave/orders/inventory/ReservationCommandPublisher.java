@@ -1,8 +1,8 @@
 package com.microwave.orders.inventory;
 
 import com.microwave.orders.config.RabbitMQConfig;
-import com.microwave.orders.inventory.messaging.ReleaseStockCommand;
-import com.microwave.orders.inventory.messaging.ReserveStockCommand;
+import com.microwave.orders.inventory.dto.ReleaseStockCommand;
+import com.microwave.orders.inventory.dto.ReserveStockCommand;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 

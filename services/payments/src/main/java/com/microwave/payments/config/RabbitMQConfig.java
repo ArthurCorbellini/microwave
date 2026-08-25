@@ -71,7 +71,7 @@ public class RabbitMQConfig {
 
   @Bean
   MessageConverter jsonMessageConverter() {
-    return new JacksonJsonMessageConverter("com.microwave.payments.payment.messaging");
+    return new JacksonJsonMessageConverter("com.microwave.payments.payment.dto");
   }
 
   @Bean

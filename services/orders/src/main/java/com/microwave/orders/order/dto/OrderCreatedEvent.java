@@ -1,4 +1,4 @@
-package com.microwave.notifications.notification;
+package com.microwave.orders.order.dto;
 
 import java.math.BigDecimal;
 import java.time.Instant;

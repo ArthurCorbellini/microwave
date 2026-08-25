@@ -1,8 +1,8 @@
 package com.microwave.inventory.reservation;
 
 import com.microwave.inventory.config.RabbitMQConfig;
-import com.microwave.inventory.reservation.messaging.InventoryReservedReply;
-import com.microwave.inventory.reservation.messaging.ReserveStockCommand;
+import com.microwave.inventory.reservation.dto.InventoryReservedReply;
+import com.microwave.inventory.reservation.dto.ReserveStockCommand;
 import com.microwave.inventory.stock.Stock;
 import com.microwave.inventory.stock.StockRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,10 +16,10 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.rabbitmq.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 import java.util.Optional;
 

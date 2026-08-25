@@ -1,6 +1,7 @@
 package com.microwave.orders.order;
 
 import com.microwave.orders.config.KafkaConfig;
+import com.microwave.orders.order.dto.OrderCreatedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -11,10 +12,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.testcontainers.kafka.ConfluentKafkaContainer;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -52,7 +53,7 @@ class OrderEventPublisherIT {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
     props.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.microwave.orders.*");
-    props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, "com.microwave.orders.order.OrderCreatedEvent");
+    props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, "com.microwave.orders.order.dto.OrderCreatedEvent");
 
     try (KafkaConsumer<String, OrderCreatedEvent> consumer = new KafkaConsumer<>(props)) {
       consumer.subscribe(List.of(KafkaConfig.ORDER_CREATED_TOPIC));

@@ -1,4 +1,4 @@
-package com.microwave.orders.order.rest;
+package com.microwave.orders.order.dto;
 
 import com.microwave.orders.order.Order;
 import com.microwave.orders.order.OrderStatus;
