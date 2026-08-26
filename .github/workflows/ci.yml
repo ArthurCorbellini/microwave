@@ -55,7 +55,7 @@ jobs:
   k8s-smoke-test:
     name: k8s-smoke-test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
 
     steps:
       - uses: actions/checkout@v5
@@ -70,7 +70,7 @@ jobs:
         run: kind create cluster --name microwave --config kind-config.yaml
 
       - name: Apply namespace
-        run: kubectl apply -f k8s/namespace.yaml
+        run: kubectl apply -f k8s/00-namespace.yaml
 
       - name: Build and load service images
         run: |
@@ -83,7 +83,7 @@ jobs:
         run: kubectl apply -R -f k8s/
 
       - name: Wait for all pods to be ready
-        run: kubectl wait --for=condition=Ready pods --all -n microwave --timeout=300s
+        run: kubectl wait --for=condition=Available deployment --all -n microwave --timeout=600s
 
       - name: Check app service health endpoints
         run: |

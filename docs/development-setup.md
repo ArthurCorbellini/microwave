@@ -68,6 +68,7 @@ Instead of `docker-compose`, the full stack can also run on a local Kind cluster
    podman tag <service>:kind docker.io/library/<service>:kind
    kind load docker-image docker.io/library/<service>:kind --name microwave
    ```
+   The explicit retag matters — Podman stores locally-built images as `localhost/<service>:kind`, which won't match the Deployment's `image: <service>:kind` reference (normalized to `docker.io/library/<service>:kind`) without it, causing `ErrImageNeverPull`.
 5. Apply the manifests: `kubectl apply -R -f k8s/`
 6. Check status: `kubectl get pods -n microwave`
 

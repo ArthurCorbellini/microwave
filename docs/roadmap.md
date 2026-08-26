@@ -102,7 +102,7 @@ Migrate from docker-compose to K8s manifests (Deployments, Services, ConfigMaps/
 
 Focus: basic K8s objects, service discovery, scaling.
 
-**Done when:** all services and brokers come up on a local cluster (Minikube/Kind) via versioned manifests, with the same end-to-end flow from Phase 4 working.
+**Done when:** all services and brokers come up on a local cluster (Kind) via versioned manifests, with the same end-to-end flow from Phase 4 working.
 
 ### Phase 6 — API Gateway and Kubernetes Ingress
 
