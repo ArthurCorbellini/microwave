@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payments-config
+  namespace: microwave
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://payments-db:5432/payments_db
+  SPRING_RABBITMQ_HOST: rabbitmq
+  SPRING_RABBITMQ_PORT: "5672"
