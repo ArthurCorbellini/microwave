@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog-config
+  namespace: microwave
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://catalog-db:5432/catalog_db
