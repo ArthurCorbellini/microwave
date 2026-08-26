@@ -126,6 +126,20 @@ Configuration for containers is env-var only — no `application.yml` placeholde
 
 Every service exposes `GET /actuator/health` via `spring-boot-starter-actuator`, with `management.endpoints.web.exposure.include=health` — no other actuator endpoint is exposed, since app ports are published to the host. New services should add this from the start; it's used for `docker-compose` healthchecks and `depends_on: condition: service_healthy` ordering, and doubles as the base for Phase 5's Kubernetes liveness/readiness probes.
 
+## Kubernetes manifests
+
+Each Deployment+Service unit lives under `k8s/<component>/` (mirroring `services/<service>/`), applied together via `kubectl apply -R -f k8s/`. All objects live in the `microwave` namespace, never `default`. Plain YAML only — no Kustomize, no Helm (see `RA-3`).
+
+Non-sensitive config goes in a `ConfigMap` (`<component>-config`); credentials go in a `Secret` (`<component>-credentials` for app services, `<component>-db-credentials` for databases) — both wired into the container via `envFrom`, mirroring the env-var names `docker-compose.yml` already uses. Env var *values* that point at another component's hostname use the K8s Service name directly (e.g. `SPRING_RABBITMQ_HOST: rabbitmq`) — this is textually identical to the compose container name it replaces, since K8s resolves Service names the same way within a namespace.
+
+App services (`catalog`, `orders`, `payments`, `inventory`, `notifications`) run `replicas: 2` behind a `NodePort` Service, on the same host-facing ports `docker-compose.yml` already publishes. Databases, RabbitMQ, and Kafka run `replicas: 1` — no `StatefulSet`, since none of them cluster — behind a `ClusterIP` Service (RabbitMQ additionally gets a `NodePort` Service for its management UI). A single-replica Postgres Deployment backed by a `PersistentVolumeClaim` uses `strategy: type: Recreate`, since a default `RollingUpdate` would try to mount the same `ReadWriteOnce` volume from two Pods at once.
+
+`docker-compose.yml` stays as a separate, fully maintained option — the K8s manifests don't replace it.
+
+Kafka's Deployment sets `enableServiceLinks: false` on its Pod template spec — Kubernetes' default `enableServiceLinks: true` injects a Docker-links-style `KAFKA_PORT=tcp://<ip>:<port>` env var for the `kafka` Service into the Pod, which collides with a legacy env var the Confluent Kafka image parses specially and breaks its startup. This is Kafka-specific, not a project-wide default — add it to a future service's Deployment only if it hits the same symptom (an env var literally named `<SERVICE-NAME>_PORT` that the image itself also assigns special meaning to).
+
+Every app service's `livenessProbe.failureThreshold` is tuned to be at least as tolerant as its `readinessProbe`'s total tolerance (both use `initialDelaySeconds: 30`; readiness allows 10 failures at a 5s period = 80s, liveness allows 9 failures at a 10s period = 120s). This matters because Kubernetes has no `depends_on` equivalent — on a cold boot, every Pod can start concurrently and compete for CPU, and Spring Boot startup that normally takes ~20s can take 60s+ under that contention. A liveness probe stricter than readiness can kill a Pod via SIGTERM just as it finishes starting, before it ever gets a chance to pass readiness — the fix is keeping liveness's tolerance window equal to or larger than readiness's, never smaller.
+
 ## Messaging (RabbitMQ and Kafka)
 
 Each service owns the exchange(s)/queue(s) that receive messages addressed to it — mirroring "database per service." A service that needs to *send* to another service's exchange declares that exchange defensively too (declaration is idempotent), so publishing never races the owning service's own startup.

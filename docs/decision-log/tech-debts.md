@@ -41,24 +41,13 @@ Branch protection on `main` requires 3 check contexts (`test (catalog)`, `test (
 ### TD-3 — App ports published directly to the host, no gateway in front
 
 **Introduced in:** Phase 2
-**Where:** `docker-compose.yml` — `catalog`, `orders`, `payments`, `inventory`, `notifications` port mappings, plus RabbitMQ's management UI
+**Where:** `docker-compose.yml` — `catalog`, `orders`, `payments`, `inventory`, `notifications` port mappings, plus RabbitMQ's management UI; and, since Phase 5, the equivalent K8s `NodePort` Services (`k8s/*/service.yaml`, `k8s/rabbitmq/service-management.yaml`) exposing the same ports
 
 All five services' ports (8081-8085) are published directly to the host so the existing Postman/curl-based testing flow keeps working, as is RabbitMQ's management UI (15672). There's no API Gateway or reverse proxy in front of them.
 
 **Why it exists:** `docs/roadmap.md`'s "Deferred decisions" section already defers the API Gateway to Phase 6, where it pairs naturally with Kubernetes Ingress (Phase 5). Phase 2 continues that same deferral — it doesn't introduce a new gap, just makes the existing one visible at the container-networking level.
 
 **Planned resolution:** two stages. Phase 6's API Gateway removes direct host port publishing, but still proxies directly to each service — a partial mitigation, not full closure, since services stay reachable, just through one more hop. Phase 8's BFF closes it fully: the Gateway is restructured to route only to the BFF, and the BFF becomes the only thing allowed to call the domain services directly. This entry only moves to `## Resolved` after Phase 8, not Phase 6.
-
-### TD-4 — DB credentials hardcoded in `docker-compose.yml`
-
-**Introduced in:** Phase 2
-**Where:** `docker-compose.yml` — `catalog-db`, `orders-db`, `payments-db`, `inventory-db`, `notifications-db`, and the corresponding `SPRING_DATASOURCE_*` env vars on each service; plus RabbitMQ's `guest`/`guest` credentials, hardcoded in `inventory`'s and `orders`' `application.yml` and left as the default since `docker-compose.yml` sets no RabbitMQ credentials at all
-
-Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at the same security level as the plaintext credentials already present in each service's `application.yml` since Phase 1.
-
-**Why it exists:** these aren't real secrets (local learning-project Postgres credentials), so introducing `.env`-based indirection now would add complexity without reducing any actual risk. See the Phase 2 design spec's rejected-approaches discussion for the full reasoning.
-
-**Planned resolution:** `docs/roadmap.md`'s Phase 5 scope already includes Kubernetes `ConfigMaps/Secrets` — that's when real secret management is introduced, replacing both this and Phase 1's `application.yml` credentials.
 
 ### TD-7 — Dead-letter queues exist, but nothing watches them
 
@@ -144,3 +133,16 @@ If `inventory` successfully reserved stock but the subsequent call to `payments`
 **Why it existed:** compensation (a `ReleaseStock` command back to `inventory`) only makes sense once `payments` itself is commanded asynchronously, matching the same saga pattern — that was explicitly Phase 4's scope, not Phase 3's.
 
 **Resolved in:** Phase 4, by adding a `ReleaseStock` command (`orders` → `inventory`, fire-and-forget) sent whenever `OrderService.handlePaymentProcessed` sees a declined `PaymentProcessedReply`. `ReservationService.release` restores `Stock` and marks the `Reservation` `RELEASED`, idempotently.
+
+### TD-4 — DB credentials hardcoded in `docker-compose.yml`
+
+**Introduced in:** Phase 2
+**Where:** `docker-compose.yml` — `catalog-db`, `orders-db`, `payments-db`, `inventory-db`, `notifications-db`, and the corresponding `SPRING_DATASOURCE_*` env vars on each service; plus RabbitMQ's `guest`/`guest` credentials, hardcoded in `inventory`'s and `orders`' `application.yml` and left as the default since `docker-compose.yml` sets no RabbitMQ credentials at all
+
+Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at the same security level as the plaintext credentials already present in each service's `application.yml` since Phase 1.
+
+**Why it existed:** these aren't real secrets (local learning-project Postgres credentials), so introducing `.env`-based indirection now would add complexity without reducing any actual risk. See the Phase 2 design spec's rejected-approaches discussion for the full reasoning.
+
+**Resolved in:** Phase 5, via a K8s `Secret` per database (`<component>-db-credentials`) and per app service (`<component>-credentials`), replacing hardcoded credentials for the K8s deployment path.
+
+Note: this resolves the gap for the K8s path only. `docker-compose.yml` and `application.yml` are unchanged and still hold plaintext local credentials — a deliberate choice, not a lingering debt: they're not real secrets, and mirroring the same `Secret`-style indirection there wouldn't reduce any actual risk.
