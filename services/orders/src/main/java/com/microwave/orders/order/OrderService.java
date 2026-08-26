@@ -3,12 +3,12 @@ package com.microwave.orders.order;
 import com.microwave.orders.catalog.CatalogClient;
 import com.microwave.orders.catalog.ProductResponse;
 import com.microwave.orders.inventory.ReservationCommandPublisher;
-import com.microwave.orders.inventory.messaging.InventoryReservedReply;
+import com.microwave.orders.inventory.dto.InventoryReservedReply;
 import com.microwave.orders.order.exceptions.OrderNotFoundException;
 import com.microwave.orders.order.exceptions.ProductNotFoundException;
 import com.microwave.orders.order.exceptions.UpstreamServiceUnavailableException;
 import com.microwave.orders.payments.PaymentCommandPublisher;
-import com.microwave.orders.payments.messaging.PaymentProcessedReply;
+import com.microwave.orders.payments.dto.PaymentProcessedReply;
 import feign.FeignException;
 import org.springframework.stereotype.Service;
 

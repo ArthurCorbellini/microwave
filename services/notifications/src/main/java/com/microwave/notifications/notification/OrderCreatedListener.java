@@ -1,6 +1,7 @@
 package com.microwave.notifications.notification;
 
 import com.microwave.notifications.config.KafkaConfig;
+import com.microwave.notifications.notification.dto.OrderCreatedEvent;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 

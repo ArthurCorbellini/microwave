@@ -1,6 +1,7 @@
 package com.microwave.notifications.notification;
 
 import com.microwave.notifications.config.KafkaConfig;
+import com.microwave.notifications.notification.dto.OrderCreatedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -12,10 +13,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
-import org.testcontainers.kafka.ConfluentKafkaContainer;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -81,7 +82,7 @@ class OrderCreatedListenerResilienceIT {
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
     props.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.microwave.notifications.*");
     props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,
-        "com.microwave.notifications.notification.OrderCreatedEvent");
+        "com.microwave.notifications.notification.dto.OrderCreatedEvent");
 
     try (KafkaConsumer<String, OrderCreatedEvent> consumer = new KafkaConsumer<>(props)) {
       consumer.subscribe(List.of(KafkaConfig.ORDER_CREATED_TOPIC + "-dlt"));

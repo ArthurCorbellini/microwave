@@ -1,7 +1,7 @@
 package com.microwave.orders.inventory;
 
 import com.microwave.orders.config.RabbitMQConfig;
-import com.microwave.orders.inventory.messaging.InventoryReservedReply;
+import com.microwave.orders.inventory.dto.InventoryReservedReply;
 import com.microwave.orders.order.OrderService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;

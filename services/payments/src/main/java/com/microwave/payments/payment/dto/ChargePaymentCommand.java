@@ -1,4 +1,4 @@
-package com.microwave.payments.payment.messaging;
+package com.microwave.payments.payment.dto;
 
 import java.math.BigDecimal;
 

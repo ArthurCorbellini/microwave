@@ -1,4 +1,7 @@
-package com.microwave.notifications.notification;
+package com.microwave.notifications.notification.dto;
+
+import com.microwave.notifications.notification.NotificationLog;
+import com.microwave.notifications.notification.NotificationType;
 
 import java.time.Instant;
 

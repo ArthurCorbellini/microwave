@@ -1,4 +1,4 @@
-package com.microwave.payments.payment.rest;
+package com.microwave.payments.payment.dto;
 
 import com.microwave.payments.payment.Payment;
 import com.microwave.payments.payment.PaymentStatus;

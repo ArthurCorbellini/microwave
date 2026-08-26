@@ -1,4 +1,4 @@
-package com.microwave.payments.payment.messaging;
+package com.microwave.payments.payment.dto;
 
 public record PaymentProcessedReply(Long orderId, boolean approved, String reason) {
 

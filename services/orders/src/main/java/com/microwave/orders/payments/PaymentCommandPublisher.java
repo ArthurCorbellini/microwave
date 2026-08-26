@@ -1,7 +1,7 @@
 package com.microwave.orders.payments;
 
 import com.microwave.orders.config.RabbitMQConfig;
-import com.microwave.orders.payments.messaging.ChargePaymentCommand;
+import com.microwave.orders.payments.dto.ChargePaymentCommand;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 

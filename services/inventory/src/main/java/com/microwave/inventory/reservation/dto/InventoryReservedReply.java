@@ -1,4 +1,4 @@
-package com.microwave.inventory.reservation.messaging;
+package com.microwave.inventory.reservation.dto;
 
 public record InventoryReservedReply(Long orderId, boolean reserved, String reason) {
 

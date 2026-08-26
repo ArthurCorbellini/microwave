@@ -1,8 +1,8 @@
 package com.microwave.payments.payment;
 
 import com.microwave.payments.config.RabbitMQConfig;
-import com.microwave.payments.payment.messaging.ChargePaymentCommand;
-import com.microwave.payments.payment.messaging.PaymentProcessedReply;
+import com.microwave.payments.payment.dto.ChargePaymentCommand;
+import com.microwave.payments.payment.dto.PaymentProcessedReply;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;

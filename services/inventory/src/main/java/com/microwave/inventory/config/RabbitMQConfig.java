@@ -98,7 +98,7 @@ public class RabbitMQConfig {
 
   @Bean
   MessageConverter jsonMessageConverter() {
-    return new JacksonJsonMessageConverter("com.microwave.inventory.reservation.messaging");
+    return new JacksonJsonMessageConverter("com.microwave.inventory.reservation.dto");
   }
 
   @Bean

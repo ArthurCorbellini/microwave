@@ -4,15 +4,15 @@ Living description of the shared code architecture across services — the "how,
 
 ## Package layout
 
-Each service follows the same shape, rooted at `com.microwave.<service>`. Within each feature package — a domain concept the service owns, or an integration boundary to another service — apply one rule to every kind of file (entity, `Service`, `Controller`, `Repository`, `Client`, `Publisher`, `Listener`, `rest`, `events`, `messaging`, `enums`, `exceptions`):
+Each service follows the same shape, rooted at `com.microwave.<service>`. Within each feature package — a domain concept the service owns, or an integration boundary to another service — apply one rule to every kind of file (entity, `Service`, `Controller`, `Repository`, `Client`, `Publisher`, `Listener`, `dto`, `enums`, `exceptions`):
 
 **A single file of a kind stays flat in the feature root. Two or more files of the same kind move into a subpackage named for that kind.**
 
-Count each kind coarsely, not by exact class name: REST request and response together count as one kind (`rest/`); RabbitMQ command and reply together count as one kind (`messaging/`). This isn't a one-time decision — when a second file of a kind appears later, move the existing single file into a newly-created subpackage at that time.
+Count each kind coarsely, not by exact class name or protocol: every DTO-shaped file — REST request/response, Kafka event, RabbitMQ command/reply — counts together as a single `dto` kind, regardless of which boundary it crosses. This isn't a one-time decision — when a second dto-kind file appears later (even a lone Kafka event later joined by a REST response), move the existing single file into a newly-created `dto/` subpackage at that time.
 
-Subpackages are named after the protocol/kind, not a generic label — `rest/`, `events/`, `messaging/`, not `dto/`: the classes inside are still DTOs in the general sense (see the DTOs section below), but the folder name says which boundary they belong to.
+The DTO subpackage is named `dto/`, not split by protocol (`rest/`/`events/`/`messaging/`, an earlier convention this project moved away from): every file in it — REST request/response, Kafka event, RabbitMQ command/reply — is structurally the same thing, an immutable data-only carrier with no behavior (see the DTOs section below). Since the folder no longer signals which boundary a class crosses, the class name suffix is the only signal left and must stay consistent: `Request`/`Response` for REST, `Event` for a Kafka domain event, `Command`/`Reply` for a RabbitMQ command/reply pair.
 
-Example (`orders`' `order/` package — 2 rest payloads, 3 exceptions, but only 1 of everything else):
+Example (`orders`' `order/` package — 3 dto-kind files (2 REST payloads + 1 Kafka event), 3 exceptions, but only 1 of everything else):
 ```
 order/
 ├── Order.java
@@ -21,10 +21,10 @@ order/
 ├── OrderRepository.java
 ├── OrderEventPublisher.java
 ├── OrderStatus.java
-├── OrderCreatedEvent.java
-├── rest/
+├── dto/
 │   ├── OrderRequest.java
-│   └── OrderResponse.java
+│   ├── OrderResponse.java
+│   └── OrderCreatedEvent.java
 └── exceptions/
     ├── OrderNotFoundException.java
     ├── ProductNotFoundException.java
@@ -37,7 +37,7 @@ If a feature package is about to get a **second** `Controller`, `Service`, or `R
 
 ## DTOs
 
-Request/response DTOs are Java `record`s. Responses built from an entity expose a static factory method, `from(...)`:
+Every REST request/response, Kafka event, and RabbitMQ command/reply is a Java `record` living in its feature package's `dto/` subpackage (see "Package layout" above), with no behavior beyond an optional `from(...)` factory. Responses built from an entity expose that static factory method:
 
 ```java
 public record OrderResponse(Long id, Long productId, int quantity, BigDecimal totalAmount, OrderStatus status) {
@@ -48,6 +48,8 @@ public record OrderResponse(Long id, Long productId, int quantity, BigDecimal to
 ```
 
 No mapping library is used — see [`RA-2`](decision-log/rejected-approaches.md) for why MapStruct was declined. This `from(...)` convention is what fills that gap; keep using it rather than reintroducing a mapper.
+
+Naming the class by its boundary (`Request`/`Response`/`Event`/`Command`/`Reply`, per "Package layout" above) is what keeps a `dto/` folder navigable now that it isn't split by protocol.
 
 ## Error handling
 
