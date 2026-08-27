@@ -32,33 +32,22 @@ When a limitation is actually fixed, move its entry under `## Resolved` and add 
 **Introduced in:** Phase 1.1
 **Where:** `main` branch protection rule (GitHub repo settings, not a versioned file)
 
-Branch protection on `main` requires 3 check contexts (`test (catalog)`, `test (orders)`, `test (payments)`) that are hardcoded strings in GitHub's branch protection config — they are not derived from `.github/workflows/ci.yml`'s `matrix.service` list. The protection config itself (`strict: false`, `enforce_admins: false`, `required_pull_request_reviews: null`) also exists only as live GitHub state, not in any versioned file. If a future phase adds a new service to the CI matrix, its check will run but won't be required, so the gate silently covers less than it appears to, with nothing in the repo to flag the gap.
+Branch protection on `main` requires check contexts (currently `test (*)` and `docker-build (*)` for all 5 services, plus `k8s-smoke-test`) that are hardcoded strings in GitHub's branch protection config — they are not derived from `.github/workflows/ci.yml`'s job/matrix definitions. The protection config itself (`strict: false`, `enforce_admins: false`, `required_pull_request_reviews: null`) also exists only as live GitHub state, not in any versioned file. If a future phase adds a new service to the CI matrix, or a new standalone job (not part of any matrix), its check will run but won't be required unless someone remembers to update this live config, so the gate can silently cover less than it appears to, with nothing in the repo to flag the gap. Phase 5 hit this directly: `k8s-smoke-test` initially shipped without being added to the required list, and was only added via a manual `gh api` call once the gap was noticed during that phase's final review — illustrating exactly how easy this is to forget.
 
 **Why it exists:** `gh api` was the only way to configure branch protection without interactive GitHub UI access in this environment. Recording the payload inline in a dated plan document isn't enough, since plans are point-in-time snapshots per project convention, not living docs — there's no versioned file that reflects current live state.
 
-**Planned resolution:** When a phase adds a new service to the CI matrix (e.g. Phase 3 adding `inventory` and `notifications`), the branch protection rule's required checks must be updated in the same change: `gh api --method PUT repos/<owner>/<repo>/branches/main/protection` with the new service's `test (<service>)` context added to the required list. Call this out explicitly in that phase's plan so it isn't missed.
+**Planned resolution:** When a phase adds a new service to the CI matrix, or a new standalone CI job, the branch protection rule's required checks must be updated in the same change: `gh api --method PUT repos/<owner>/<repo>/branches/main/protection` with the new context(s) added to the required list. Call this out explicitly in that phase's plan so it isn't missed.
 
 ### TD-3 — App ports published directly to the host, no gateway in front
 
 **Introduced in:** Phase 2
-**Where:** `docker-compose.yml` — `catalog`, `orders`, `payments`, `inventory`, `notifications` port mappings, plus RabbitMQ's management UI
+**Where:** `docker-compose.yml` — `catalog`, `orders`, `payments`, `inventory`, `notifications` port mappings, plus RabbitMQ's management UI; and, since Phase 5, the equivalent K8s `NodePort` Services (`k8s/*/service.yaml`, `k8s/rabbitmq/service-management.yaml`) exposing the same ports
 
 All five services' ports (8081-8085) are published directly to the host so the existing Postman/curl-based testing flow keeps working, as is RabbitMQ's management UI (15672). There's no API Gateway or reverse proxy in front of them.
 
 **Why it exists:** `docs/roadmap.md`'s "Deferred decisions" section already defers the API Gateway to Phase 6, where it pairs naturally with Kubernetes Ingress (Phase 5). Phase 2 continues that same deferral — it doesn't introduce a new gap, just makes the existing one visible at the container-networking level.
 
 **Planned resolution:** two stages. Phase 6's API Gateway removes direct host port publishing, but still proxies directly to each service — a partial mitigation, not full closure, since services stay reachable, just through one more hop. Phase 8's BFF closes it fully: the Gateway is restructured to route only to the BFF, and the BFF becomes the only thing allowed to call the domain services directly. This entry only moves to `## Resolved` after Phase 8, not Phase 6.
-
-### TD-4 — DB credentials hardcoded in `docker-compose.yml`
-
-**Introduced in:** Phase 2
-**Where:** `docker-compose.yml` — `catalog-db`, `orders-db`, `payments-db`, `inventory-db`, `notifications-db`, and the corresponding `SPRING_DATASOURCE_*` env vars on each service; plus RabbitMQ's `guest`/`guest` credentials, hardcoded in `inventory`'s and `orders`' `application.yml` and left as the default since `docker-compose.yml` sets no RabbitMQ credentials at all
-
-Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at the same security level as the plaintext credentials already present in each service's `application.yml` since Phase 1.
-
-**Why it exists:** these aren't real secrets (local learning-project Postgres credentials), so introducing `.env`-based indirection now would add complexity without reducing any actual risk. See the Phase 2 design spec's rejected-approaches discussion for the full reasoning.
-
-**Planned resolution:** `docs/roadmap.md`'s Phase 5 scope already includes Kubernetes `ConfigMaps/Secrets` — that's when real secret management is introduced, replacing both this and Phase 1's `application.yml` credentials.
 
 ### TD-7 — Dead-letter queues exist, but nothing watches them
 
@@ -144,3 +133,16 @@ If `inventory` successfully reserved stock but the subsequent call to `payments`
 **Why it existed:** compensation (a `ReleaseStock` command back to `inventory`) only makes sense once `payments` itself is commanded asynchronously, matching the same saga pattern — that was explicitly Phase 4's scope, not Phase 3's.
 
 **Resolved in:** Phase 4, by adding a `ReleaseStock` command (`orders` → `inventory`, fire-and-forget) sent whenever `OrderService.handlePaymentProcessed` sees a declined `PaymentProcessedReply`. `ReservationService.release` restores `Stock` and marks the `Reservation` `RELEASED`, idempotently.
+
+### TD-4 — DB credentials hardcoded in `docker-compose.yml`
+
+**Introduced in:** Phase 2
+**Where:** `docker-compose.yml` — `catalog-db`, `orders-db`, `payments-db`, `inventory-db`, `notifications-db`, and the corresponding `SPRING_DATASOURCE_*` env vars on each service; plus RabbitMQ's `guest`/`guest` credentials, hardcoded in `inventory`'s and `orders`' `application.yml` and left as the default since `docker-compose.yml` sets no RabbitMQ credentials at all
+
+Database usernames/passwords are hardcoded directly in `docker-compose.yml`, at the same security level as the plaintext credentials already present in each service's `application.yml` since Phase 1.
+
+**Why it existed:** these aren't real secrets (local learning-project Postgres credentials), so introducing `.env`-based indirection now would add complexity without reducing any actual risk. See the Phase 2 design spec's rejected-approaches discussion for the full reasoning.
+
+**Resolved in:** Phase 5, via a K8s `Secret` per database (`<component>-db-credentials`) and per app service (`<component>-credentials`), replacing hardcoded credentials for the K8s deployment path.
+
+Note: this resolves the gap for the K8s path only. `docker-compose.yml` and `application.yml` are unchanged and still hold plaintext local credentials — a deliberate choice, not a lingering debt: they're not real secrets, and mirroring the same `Secret`-style indirection there wouldn't reduce any actual risk. RabbitMQ's `guest`/`guest` credentials specifically stay hardcoded in `application.yml` on **both** the compose and K8s paths — none of the K8s ConfigMaps set RabbitMQ credentials, only `SPRING_RABBITMQ_HOST`/`_PORT` — for the same reason: not a real secret, so no risk reduction from indirection.

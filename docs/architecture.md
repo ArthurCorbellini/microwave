@@ -45,6 +45,8 @@ flowchart LR
 - Every service is still reachable directly — ports are published to the host (see [`TD-3`](decision-log/tech-debts.md), still open).
 - Database per service, now 5 instead of 3, plus RabbitMQ and Kafka as new shared infrastructure (each with a single instance, no per-service broker).
 
+As of Phase 5, this topology runs on a local Kind cluster (`kubectl apply -R -f k8s/`) rather than directly via `docker-compose` — the diagram's services and edges are unchanged, only how they're deployed. `docker-compose.yml` still works as a separate, fully maintained option.
+
 ## Target architecture (end of Phase 8)
 
 ```mermaid

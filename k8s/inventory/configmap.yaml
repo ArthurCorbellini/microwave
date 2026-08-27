@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inventory-config
+  namespace: microwave
+data:
+  SPRING_PROFILES_ACTIVE: demo
+  SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-db:5432/inventory_db
+  SPRING_RABBITMQ_HOST: rabbitmq
+  SPRING_RABBITMQ_PORT: "5672"

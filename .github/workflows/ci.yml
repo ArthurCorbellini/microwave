@@ -52,6 +52,51 @@ jobs:
       - name: Build image
         run: docker build -t ${{ matrix.service }}:ci services/${{ matrix.service }}
 
+  k8s-smoke-test:
+    name: k8s-smoke-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install kind
+        run: |
+          curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/v0.26.0/kind-linux-amd64
+          chmod +x /tmp/kind
+          sudo mv /tmp/kind /usr/local/bin/kind
+
+      - name: Create kind cluster
+        run: kind create cluster --name microwave --config kind-config.yaml
+
+      - name: Apply namespace
+        run: kubectl apply -f k8s/00-namespace.yaml
+
+      - name: Build and load service images
+        run: |
+          for svc in catalog orders payments inventory notifications; do
+            docker build -t ${svc}:kind services/${svc}
+            kind load docker-image ${svc}:kind --name microwave
+          done
+
+      - name: Apply manifests
+        run: kubectl apply -R -f k8s/
+
+      - name: Wait for all pods to be ready
+        run: kubectl wait --for=condition=Available deployment --all -n microwave --timeout=600s
+
+      - name: Check app service health endpoints
+        run: |
+          for port in 8081 8082 8083 8084 8085; do
+            curl -sf http://localhost:${port}/actuator/health
+          done
+
+      - name: Dump pod status on failure
+        if: failure()
+        run: |
+          kubectl get pods -n microwave -o wide
+          kubectl describe pods -n microwave
+
   sonar:
     name: sonar (${{ matrix.service }})
     runs-on: ubuntu-latest

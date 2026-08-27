@@ -50,3 +50,28 @@ docker-compose down -v      # stop and wipe all data (named volumes)
 ```
 
 Services are reachable at the same ports as native mode: `catalog` on `8081`, `payments` on `8082`, `orders` on `8083`. `docker-compose` picks up `DOCKER_HOST` from `mise.local.toml` automatically (same socket Testcontainers already uses), so no extra configuration is needed beyond what step 3 above already sets up.
+
+## Running via Kubernetes (Kind)
+
+Instead of `docker-compose`, the full stack can also run on a local Kind cluster:
+
+1. Install `kind` (v0.26.0) and `kubectl` (matching your cluster's version) — see `kind-config.yaml` for the cluster shape, and `.github/workflows/ci.yml`'s `k8s-smoke-test` job for the exact install commands used in CI.
+2. If using Podman (see the Podman note above), add to `mise.local.toml`:
+   ```toml
+   [env]
+   KIND_EXPERIMENTAL_PROVIDER = "podman"
+   ```
+3. Create the cluster: `kind create cluster --name microwave --config kind-config.yaml`
+4. Build and load each service's image (repeat per service — `catalog`, `orders`, `payments`, `inventory`, `notifications`):
+   ```bash
+   podman build -t <service>:kind services/<service>
+   podman tag <service>:kind docker.io/library/<service>:kind
+   kind load docker-image docker.io/library/<service>:kind --name microwave
+   ```
+   The explicit retag matters — Podman stores locally-built images as `localhost/<service>:kind`, which won't match the Deployment's `image: <service>:kind` reference (normalized to `docker.io/library/<service>:kind`) without it, causing `ErrImageNeverPull`.
+5. Apply the manifests: `kubectl apply -R -f k8s/`
+6. Check status: `kubectl get pods -n microwave`
+
+Services are reachable at the same ports as `docker-compose`: `catalog` on `8081`, `payments` on `8082`, `orders` on `8083`, `inventory` on `8084`, `notifications` on `8085`, RabbitMQ's management UI on `15672`.
+
+Tear down: `kind delete cluster --name microwave`.

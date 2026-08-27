@@ -47,3 +47,14 @@ Entity↔DTO mapping is done by hand-written static `from()` factory methods on 
 **Why it was rejected:** MapStruct's real value (nested objects, field renames, type conversion) isn't exercised by any current DTO, and its default `unmappedTargetPolicy` is `WARN`, not a compile error — a looser safety net than the manual `from()` already gives for free.
 
 **Revisit if:** a future phase introduces DTOs complex enough to justify it (nested objects, renamed fields, type conversions).
+
+### RA-3 — Kustomize/Helm not adopted for K8s manifests
+
+**Considered in:** Phase 5 (Kubernetes orchestration) brainstorming
+**Where:** the K8s manifests introduced by Phase 5 (Deployments, Services, ConfigMaps/Secrets for all 5 services plus RabbitMQ/Kafka/Postgres)
+
+Kustomize (overlays for per-environment config) and Helm (templated charts, the most common in production/job listings) were both considered instead of plain YAML manifests.
+
+**Why it was rejected:** Phase 5's own scope is learning the core K8s objects (Deployment, Service, ConfigMap/Secret) and how they compose — stacking a templating/packaging tool on top before those fundamentals are internalized would mix two new sets of concepts in the same phase. Plain YAML also matches Phase 9's plan to reuse "the same manifests" on a cloud-provisioned cluster without depending on any tooling choice made here.
+
+**Revisit if:** (a) local (Kind) and cloud (Phase 9) configuration diverge enough that plain YAML would mean duplicating most of a manifest per environment, (b) the number/size of hand-written manifest files becomes genuinely hard to maintain, or (c) independent of either need, as a deliberate end-of-roadmap refinement exercise — once the phases in `docs/roadmap.md` are complete, adopting Helm or Kustomize purely to practice the tooling itself is a reasonable next thing to learn.
